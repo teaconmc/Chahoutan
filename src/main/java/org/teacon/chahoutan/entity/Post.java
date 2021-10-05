@@ -44,15 +44,15 @@ public class Post
     public Revision revision = null;
 
     @ElementCollection
-    @Column(columnDefinition = "text")
-    @CollectionTable(name = "chahoutan_editors", indexes = @Index(columnList = "post_id"))
-    public Set<String> editors = new HashSet<>();
+    @Column(columnDefinition = "text", nullable = false)
+    @CollectionTable(name = "chahoutan_editors")
+    public Set<String> editor = new HashSet<>();
 
     public static Post from(Request request, ImageRepository imageRepo)
     {
         var post = new Post();
         post.id = request.id;
-        post.editors = new HashSet<>(request.editors);
+        post.editor = new HashSet<>(request.editors);
         post.revision = Revision.from(post, request.text);
         post.revision.image = request.images().stream()
                 .map(r -> Image.from(r, imageRepo).orElseThrow(BadRequestException::new)).toList();
@@ -86,7 +86,7 @@ public class Post
             var publishTime = getPublishTime(post);
             var type = post.id <= Post.getLastPublicPostId(null) ? "post" : "draft";
             var name = String.format("#%d (%s)", post.id, publishTime.toLocalDate());
-            var editors = post.editors.stream().sorted().toList();
+            var editors = post.editor.stream().sorted().toList();
             var images = post.revision.image.stream().map(Image.Response::from).toList();
             return new Response(post.id, type, name, post.revision.text, post.revision.id, editors, images, publishTime);
         }
@@ -97,7 +97,7 @@ public class Post
             var isPost = revision.post.revision != null && revision.post.revision.id.equals(revision.id);
             var type = isPost ? revision.post.id <= Post.getLastPublicPostId(null) ? "post" : "draft" : "revision";
             var name = String.format("#%d (%s)", revision.post.id, publishTime.toLocalDate());
-            var editors = revision.post.editors.stream().sorted().toList();
+            var editors = revision.post.editor.stream().sorted().toList();
             var images = revision.image.stream().map(Image.Response::from).toList();
             return new Response(revision.post.id, type, name, revision.text, revision.id, editors, images, publishTime);
         }
