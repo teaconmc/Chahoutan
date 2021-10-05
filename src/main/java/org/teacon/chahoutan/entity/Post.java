@@ -1,5 +1,6 @@
 package org.teacon.chahoutan.entity;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBridgeRef;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
@@ -77,6 +78,7 @@ public class Post
                                   @JsonProperty(value = "title") String title,
                                   @JsonProperty(value = "text") String text,
                                   @JsonProperty(value = "revision") UUID revision,
+                                  @JsonInclude(JsonInclude.Include.NON_NULL)
                                   @JsonProperty(value = "editors") List<String> editors,
                                   @JsonProperty(value = "images") List<Image.Response> images,
                                   @JsonProperty(value = "publish_time") OffsetDateTime publishTime)
@@ -97,7 +99,7 @@ public class Post
             var isPost = revision.post.revision != null && revision.post.revision.id.equals(revision.id);
             var type = isPost ? revision.post.id <= Post.getLastPublicPostId(null) ? "post" : "draft" : "revision";
             var name = String.format("#%d (%s)", revision.post.id, publishTime.toLocalDate());
-            var editors = revision.post.editor.stream().sorted().toList();
+            var editors = isPost ? revision.post.editor.stream().sorted().toList() : null;
             var images = revision.image.stream().map(Image.Response::from).toList();
             return new Response(revision.post.id, type, name, revision.text, revision.id, editors, images, publishTime);
         }
