@@ -16,7 +16,7 @@ public class Revision
     @Id
     @GeneratedValue(generator = "UUID")
     @Column(name = "id", nullable = false)
-    public UUID id = null;
+    public UUID id;
 
     @ManyToOne
     @JoinColumn(name = "post", nullable = false)

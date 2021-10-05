@@ -36,7 +36,7 @@ public class Post
     @DocumentId
     @GenericField(name = "id")
     @Column(name = "id", nullable = false)
-    public Integer id = 0;
+    public Integer id;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "revision_id")

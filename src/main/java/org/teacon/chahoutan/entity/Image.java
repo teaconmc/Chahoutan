@@ -29,7 +29,7 @@ public class Image
     @ElementCollection
     @MapKeyColumn(name = "suffix", length = 16)
     @CollectionTable(name = "chahoutan_image_binaries", joinColumns = @JoinColumn(name = "image_id", referencedColumnName = "id"))
-    public Map<String, Binary> binary;
+    public Map<String, Binary> binary = new HashMap<>();
 
     @ManyToMany
     @OrderBy("creationTime DESC")
@@ -107,7 +107,7 @@ public class Image
         @Serial
         private static final long serialVersionUID = -6119251919351052273L;
 
-        @Column(columnDefinition = "blob")
+        @Column(columnDefinition = "blob", nullable = false)
         public byte[] binary = new byte[0];
 
         public static Binary from(byte[] binary)
