@@ -39,12 +39,13 @@ public class Post
     public Integer id = 0;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "revision")
+    @JoinColumn(name = "revision_id")
     @FullTextField(name = "text", analyzer = "smartcn", valueBridge = @ValueBridgeRef(type = Revision.Bridge.class))
     public Revision revision = null;
 
     @ElementCollection
-    @CollectionTable(name = "chahoutan_editors")
+    @Column(columnDefinition = "text")
+    @CollectionTable(name = "chahoutan_editors", indexes = @Index(columnList = "post_id"))
     public Set<String> editors = new HashSet<>();
 
     public static Post from(Request request, ImageRepository imageRepo)

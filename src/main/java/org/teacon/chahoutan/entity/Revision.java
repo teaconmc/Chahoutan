@@ -25,8 +25,7 @@ public class Revision
     @Column(name = "creation_time", nullable = false)
     public Instant creationTime = Instant.EPOCH;
 
-    @Lob
-    @Column(name = "text", nullable = false)
+    @Column(name = "text", columnDefinition = "text", nullable = false)
     public String text = "";
 
     @ManyToMany

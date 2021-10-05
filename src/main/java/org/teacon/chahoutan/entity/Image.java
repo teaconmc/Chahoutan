@@ -27,7 +27,7 @@ public class Image
     public Instant uploadTime = Instant.EPOCH;
 
     @ElementCollection
-    @MapKeyColumn(name = "suffix")
+    @MapKeyColumn(name = "suffix", length = 16)
     @CollectionTable(name = "chahoutan_image_binaries", joinColumns = @JoinColumn(name = "image_id", referencedColumnName = "id"))
     public Map<String, Binary> binary;
 
@@ -107,7 +107,7 @@ public class Image
         @Serial
         private static final long serialVersionUID = -6119251919351052273L;
 
-        @Lob
+        @Column(columnDefinition = "blob")
         public byte[] binary = new byte[0];
 
         public static Binary from(byte[] binary)
