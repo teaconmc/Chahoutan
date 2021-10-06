@@ -35,45 +35,51 @@ java -jar build/libs/Chahoutan-<version>.jar
 ```sql
 create table chahoutan_editors
 (
-	post_id integer not null,
-	editor text not null,
-	primary key (post_id, editor)
+    post_id integer not null,
+    editor text not null,
+    primary key (post_id, editor)
 );
 
 create table chahoutan_image_binaries
 (
-	image_id varchar(64) not null,
-	binary blob not null,
-	suffix varchar(16) not null,
-	primary key (image_id, suffix)
+    image_id varchar(64) not null,
+    binary blob not null,
+    suffix varchar(16) not null,
+    primary key (image_id, suffix)
 );
 
 create table chahoutan_images
 (
-	id varchar(64) not null primary key,
-	upload_time datetime not null
+    id varchar(64) not null primary key,
+    upload_time datetime not null
+);
+
+create table chahoutan_metadata
+(
+    id varchar(64) not null primary key,
+    text text not null
 );
 
 create table chahoutan_post_images
 (
-	revision_id blob not null,
-	image_id varchar(64) not null,
-	image_ordinal integer not null,
-	primary key (revision_id, image_ordinal)
+    revision_id blob not null,
+    image_id varchar(64) not null,
+    image_ordinal integer not null,
+    primary key (revision_id, image_ordinal)
 );
 
 create table chahoutan_posts
 (
-	id integer not null primary key,
-	revision_id blob -- nullable
+    id integer not null primary key,
+    revision_id blob -- nullable
 );
 
 create table chahoutan_revisions
 (
-	id blob not null primary key,
-	creation_time datetime not null,
-	text text not null,
-	post integer not null
+    id blob not null primary key,
+    creation_time datetime not null,
+    text text not null,
+    post integer not null
 );
 ```
 
@@ -93,6 +99,13 @@ HTTP 后端位于 48175 端口。
 ```text
 # 显示最新 API 版本
 GET /
+
+# 显示 Metadata
+GET /metadata
+
+# RSS / Atom
+GET /feed
+GET /feed/atom
 
 # 查看重新索引已有茶后谈的状态
 GET /v1/refresh
@@ -132,6 +145,12 @@ GET /v1/posts/{{revision-id}}/revisions
 > `POST /v1/images` 的 `Content-Type` 需为图片格式，`DELETE` 和 `POST /v1/refresh` 无需 `Content-Type`，其他均为 `application/json`。
 
 ```text
+# 增补 Metadata
+POST /metadata
+
+# 增补和删除 Metadata
+PUT /metadata
+
 # 重新索引已有茶后谈（无需 Content-Type，body 将会被忽略）
 POST /v1/refresh
 
