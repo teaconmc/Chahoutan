@@ -4,6 +4,7 @@ import com.rometools.rome.feed.synd.*;
 import com.rometools.rome.io.FeedException;
 import com.rometools.rome.io.SyndFeedOutput;
 import org.springframework.stereotype.Component;
+import org.teacon.chahoutan.entity.Metadata;
 import org.teacon.chahoutan.entity.Post;
 import org.teacon.chahoutan.entity.Revision;
 import org.teacon.chahoutan.repo.MetadataRepository;
@@ -18,6 +19,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Consumer;
 
 @Component
 @Path("/feed")
@@ -69,21 +71,21 @@ public class FeedEndpoint
     private SyndFeed getFeed(String type)
     {
         var feed = new SyndFeedImpl();
-        var author = this.metadataRepo.findById("author").map(m -> m.text).orElse("TeaCon");
-        var title = this.metadataRepo.findById("title").map(m -> m.text).orElse("TeaCon Chahoutan");
-        var urlPrefix = URI.create(this.metadataRepo.findById("url_prefix").map(m -> m.text).orElse(DEFAULT_URL_PREFIX));
+        var author = this.getOrSave("manager", "TeaCon");
+        var title = this.getOrSave("title", "TeaCon Chahoutan");
+        var urlPrefix = URI.create(this.getOrSave("url_prefix", DEFAULT_URL_PREFIX));
 
         feed.setFeedType(type);
 
         var manager = new SyndPersonImpl();
         manager.setName(author);
-        this.metadataRepo.findById("email").map(m -> m.text).ifPresent(manager::setEmail);
+        this.executeIfGet("email", manager::setEmail);
 
         feed.setTitle(title);
         feed.setAuthor(author);
         feed.setAuthors(List.of(manager));
         feed.setLink(urlPrefix.toASCIIString());
-        feed.setDescription(this.metadataRepo.findById("description").map(m -> m.text).orElse(title));
+        feed.setDescription(this.getOrSave("description", title));
 
         var items = new ArrayList<SyndEntry>(20);
         var lastId = Post.getLastPublicPostId(null);
@@ -125,5 +127,15 @@ public class FeedEndpoint
         feed.setEntries(items);
 
         return feed;
+    }
+
+    private void executeIfGet(String id, Consumer<String> consumer)
+    {
+        this.metadataRepo.findById(id).map(m -> m.text).ifPresent(consumer);
+    }
+
+    private String getOrSave(String id, String def)
+    {
+        return this.metadataRepo.findById(id).orElseGet(() -> this.metadataRepo.save(Metadata.from(id, def))).text;
     }
 }

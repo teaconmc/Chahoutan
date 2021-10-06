@@ -15,4 +15,12 @@ public class Metadata
 
     @Column(name = "text", columnDefinition = "text", nullable = false)
     public String text = "";
+
+    public static Metadata from(String id, String text)
+    {
+        var result = new Metadata();
+        result.text = text;
+        result.id = id;
+        return result;
+    }
 }
