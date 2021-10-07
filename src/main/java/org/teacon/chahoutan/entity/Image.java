@@ -1,6 +1,7 @@
 package org.teacon.chahoutan.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.teacon.chahoutan.ChahoutanConfig;
 import org.teacon.chahoutan.repo.ImageRepository;
 
 import javax.imageio.ImageIO;
@@ -8,6 +9,7 @@ import javax.persistence.*;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.DefaultValue;
 import java.io.*;
+import java.net.URI;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
@@ -126,11 +128,18 @@ public class Image
 
     public static record Response(@JsonProperty(value = "id") String id,
                                   @JsonProperty(value = "png") String png,
-                                  @JsonProperty(value = "webp") String webp)
+                                  @JsonProperty(value = "png_url") URI pngUrl,
+                                  @JsonProperty(value = "webp") String webp,
+                                  @JsonProperty(value = "webp_url") URI webpUrl)
     {
         public static Response from(Image image)
         {
-            return new Response(image.id, image.id + ".png", image.id + ".webp");
+            var urlPrefix = URI.create(ChahoutanConfig.BACKEND_URL_PREFIX);
+            var pngFile = image.id + ".png";
+            var pngUrl = urlPrefix.resolve("v1/images/" + pngFile);
+            var webpFile = image.id + ".webp";
+            var webpUrl = urlPrefix.resolve("v1/images/" + webpFile);
+            return new Response(image.id, pngFile, pngUrl, webpFile, webpUrl);
         }
     }
 }

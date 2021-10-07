@@ -12,6 +12,7 @@ import org.teacon.chahoutan.repo.ImageRepository;
 
 import javax.persistence.*;
 import javax.ws.rs.BadRequestException;
+import java.net.URI;
 import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.Instant;
@@ -81,10 +82,13 @@ public class Post
     }
 
     public static record Response(@JsonProperty(value = "id") int id,
+                                  @JsonInclude(JsonInclude.Include.NON_NULL)
+                                  @JsonProperty(value = "url") URI url,
                                   @JsonProperty(value = "type") String type,
                                   @JsonProperty(value = "title") String title,
                                   @JsonProperty(value = "text") String text,
                                   @JsonProperty(value = "revision") UUID revision,
+                                  @JsonProperty(value = "revision_url") URI revisionUrl,
                                   @JsonInclude(JsonInclude.Include.NON_NULL)
                                   @JsonProperty(value = "editors") List<String> editors,
                                   @JsonProperty(value = "images") List<Image.Response> images,
@@ -94,11 +98,14 @@ public class Post
         {
             var revision = post.revision;
             var publishTime = getPublishTime(post);
+            var urlPrefix = URI.create(ChahoutanConfig.BACKEND_URL_PREFIX);
+            var url = urlPrefix.resolve("v1/posts/" + post.id);
+            var revisionUrl = urlPrefix.resolve("v1/posts/" + revision.id);
             var type = post.id <= Post.getLastPublicPostId(null) ? "post" : "draft";
             var name = MessageFormat.format(ChahoutanConfig.NAME_PATTERN, post.id, publishTime.toLocalDate());
             var editors = post.editor.stream().sorted().toList();
             var images = revision.image.stream().map(Image.Response::from).toList();
-            return new Response(post.id, type, name, revision.text, revision.id, editors, images, publishTime);
+            return new Response(post.id, url, type, name, revision.text, revision.id, revisionUrl, editors, images, publishTime);
         }
 
         public static Response from(Revision revision)
@@ -106,11 +113,14 @@ public class Post
             var post = revision.post;
             var publishTime = getPublishTime(post);
             var isPost = post.revision != null && post.revision.id.equals(revision.id);
+            var urlPrefix = URI.create(ChahoutanConfig.BACKEND_URL_PREFIX);
+            var url = isPost ? urlPrefix.resolve("v1/posts/" + post.id) : null;
+            var revisionUrl = urlPrefix.resolve("v1/posts/" + revision.id);
             var type = isPost ? post.id <= Post.getLastPublicPostId(null) ? "post" : "draft" : "revision";
             var name = MessageFormat.format(ChahoutanConfig.NAME_PATTERN, post.id, publishTime.toLocalDate());
             var editors = isPost ? post.editor.stream().sorted().toList() : null;
             var images = revision.image.stream().map(Image.Response::from).toList();
-            return new Response(post.id, type, name, revision.text, revision.id, editors, images, publishTime);
+            return new Response(post.id, url, type, name, revision.text, revision.id, revisionUrl, editors, images, publishTime);
         }
     }
 }
