@@ -54,12 +54,6 @@ create table chahoutan_images
     upload_time datetime not null
 );
 
-create table chahoutan_metadata
-(
-    id varchar(64) not null primary key,
-    text text not null
-);
-
 create table chahoutan_post_images
 (
     revision_id blob not null,
@@ -99,9 +93,6 @@ HTTP 后端位于 48175 端口。
 ```text
 # 显示最新 API 版本
 GET /
-
-# 显示 Metadata
-GET /metadata
 
 # RSS / Atom
 GET /feed
@@ -145,12 +136,6 @@ GET /v1/posts/{{revision-id}}/revisions
 > `POST /v1/images` 的 `Content-Type` 需为图片格式，`DELETE` 和 `POST /v1/refresh` 无需 `Content-Type`，其他均为 `application/json`。
 
 ```text
-# 增补 Metadata
-POST /metadata
-
-# 增补和删除 Metadata
-PUT /metadata
-
 # 重新索引已有茶后谈（无需 Content-Type，body 将会被忽略）
 POST /v1/refresh
 

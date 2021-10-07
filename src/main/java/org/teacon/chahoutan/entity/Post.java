@@ -7,11 +7,16 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.teacon.chahoutan.ChahoutanConfig;
 import org.teacon.chahoutan.repo.ImageRepository;
 
 import javax.persistence.*;
 import javax.ws.rs.BadRequestException;
-import java.time.*;
+import java.text.MessageFormat;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -68,11 +73,6 @@ public class Post
         return Instant.ofEpochMilli(POST_EPOCH + post.id * POST_INTERVAL).atOffset(ZONE_OFFSET);
     }
 
-    public static String getTitle(Post post, LocalDate publishTime)
-    {
-        return String.format("#%d (%s)", post.id, publishTime);
-    }
-
     public static record Request(@JsonProperty(value = "id", required = true) int id,
                                  @JsonProperty(value = "text", required = true) String text,
                                  @JsonProperty(value = "editors", required = true) List<String> editors,
@@ -84,7 +84,6 @@ public class Post
                                   @JsonProperty(value = "type") String type,
                                   @JsonProperty(value = "title") String title,
                                   @JsonProperty(value = "text") String text,
-                                  @JsonProperty(value = "html") String html,
                                   @JsonProperty(value = "revision") UUID revision,
                                   @JsonInclude(JsonInclude.Include.NON_NULL)
                                   @JsonProperty(value = "editors") List<String> editors,
@@ -94,26 +93,24 @@ public class Post
         public static Response from(Post post)
         {
             var revision = post.revision;
-            var html = Revision.toHtmlText(revision).toString();
             var publishTime = getPublishTime(post);
             var type = post.id <= Post.getLastPublicPostId(null) ? "post" : "draft";
-            var name = getTitle(post, publishTime.toLocalDate());
+            var name = MessageFormat.format(ChahoutanConfig.NAME_PATTERN, post.id, publishTime.toLocalDate());
             var editors = post.editor.stream().sorted().toList();
             var images = revision.image.stream().map(Image.Response::from).toList();
-            return new Response(post.id, type, name, revision.text, html, revision.id, editors, images, publishTime);
+            return new Response(post.id, type, name, revision.text, revision.id, editors, images, publishTime);
         }
 
         public static Response from(Revision revision)
         {
             var post = revision.post;
-            var html = Revision.toHtmlText(revision);
             var publishTime = getPublishTime(post);
             var isPost = post.revision != null && post.revision.id.equals(revision.id);
             var type = isPost ? post.id <= Post.getLastPublicPostId(null) ? "post" : "draft" : "revision";
-            var name = getTitle(post, publishTime.toLocalDate());
+            var name = MessageFormat.format(ChahoutanConfig.NAME_PATTERN, post.id, publishTime.toLocalDate());
             var editors = isPost ? post.editor.stream().sorted().toList() : null;
             var images = revision.image.stream().map(Image.Response::from).toList();
-            return new Response(post.id, type, name, revision.text, html, revision.id, editors, images, publishTime);
+            return new Response(post.id, type, name, revision.text, revision.id, editors, images, publishTime);
         }
     }
 }

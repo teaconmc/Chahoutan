@@ -4,10 +4,9 @@ import com.rometools.rome.feed.synd.*;
 import com.rometools.rome.io.FeedException;
 import com.rometools.rome.io.SyndFeedOutput;
 import org.springframework.stereotype.Component;
-import org.teacon.chahoutan.entity.Metadata;
+import org.teacon.chahoutan.ChahoutanConfig;
 import org.teacon.chahoutan.entity.Post;
 import org.teacon.chahoutan.entity.Revision;
-import org.teacon.chahoutan.repo.MetadataRepository;
 import org.teacon.chahoutan.repo.PostRepository;
 
 import javax.ws.rs.GET;
@@ -16,25 +15,22 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.net.URI;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 @Component
 @Path("/feed")
 @Produces("application/rss+xml; charset=utf-8")
 public class FeedEndpoint
 {
-    private static final String DEFAULT_URL_PREFIX = "https://www.teacon.cn/chahoutan";
-
     private final PostRepository postRepo;
-    private final MetadataRepository metadataRepo;
 
-    public FeedEndpoint(PostRepository postRepo, MetadataRepository metadataRepo)
+    public FeedEndpoint(PostRepository postRepo)
     {
         this.postRepo = postRepo;
-        this.metadataRepo = metadataRepo;
     }
 
     @GET
@@ -71,21 +67,19 @@ public class FeedEndpoint
     private SyndFeed getFeed(String type)
     {
         var feed = new SyndFeedImpl();
-        var author = this.getOrSave("manager", "TeaCon");
-        var title = this.getOrSave("title", "TeaCon Chahoutan");
-        var urlPrefix = URI.create(this.getOrSave("url_prefix", DEFAULT_URL_PREFIX));
+        var urlPrefix = URI.create(ChahoutanConfig.FRONTEND_URL_PREFIX);
 
         feed.setFeedType(type);
 
-        var manager = new SyndPersonImpl();
-        manager.setName(author);
-        this.executeIfGet("email", manager::setEmail);
+        var chahoutanAuthor = new SyndPersonImpl();
+        chahoutanAuthor.setName(ChahoutanConfig.AUTHOR);
+        chahoutanAuthor.setEmail(ChahoutanConfig.EMAIL);
 
-        feed.setTitle(title);
-        feed.setAuthor(author);
-        feed.setAuthors(List.of(manager));
-        feed.setLink(urlPrefix.toASCIIString());
-        feed.setDescription(this.getOrSave("description", title));
+        feed.setTitle(ChahoutanConfig.TITLE);
+        feed.setAuthor(ChahoutanConfig.AUTHOR);
+        feed.setAuthors(List.of(chahoutanAuthor));
+        feed.setDescription(ChahoutanConfig.DESCRIPTION);
+        feed.setLink(ChahoutanConfig.FRONTEND_URL_PREFIX);
 
         var items = new ArrayList<SyndEntry>(20);
         var lastId = Post.getLastPublicPostId(null);
@@ -93,7 +87,7 @@ public class FeedEndpoint
         {
             var entry = new SyndEntryImpl();
             var publishTIme = Post.getPublishTime(post);
-            var name = Post.getTitle(post, publishTIme.toLocalDate());
+            var name = MessageFormat.format(ChahoutanConfig.NAME_PATTERN, post.id, publishTIme.toLocalDate());
 
             entry.setTitle(name);
             entry.setUri(post.revision.id.toString());
@@ -101,41 +95,29 @@ public class FeedEndpoint
 
             var content = new SyndContentImpl();
             content.setType(MediaType.TEXT_HTML);
-            content.setValue(Revision.toHtmlText(post.revision)); // TODO: images and editors
+            content.setValue(Revision.toRssHtmlText(post.revision));
             entry.setContents(List.of(content));
 
             var description = new SyndContentImpl();
             description.setType(MediaType.TEXT_PLAIN);
-            description.setValue(Revision.toPlainText(post.revision));
+            description.setValue(Revision.toRssPlainText(post.revision));
             entry.setDescription(description);
 
-            entry.setPublishedDate(Date.from(publishTIme.toInstant()));
-
-            var editors = new ArrayList<SyndPerson>();
-            for (String editor : post.editor)
+            var editors = post.editor.stream().sorted().map(editor ->
             {
                 var person = new SyndPersonImpl();
                 person.setName(editor);
-                editors.add(person);
-            }
-            editors.add(manager);
-            entry.setAuthor(author);
-            entry.setAuthors(editors);
+                return person;
+            });
+            entry.setAuthors(Stream.<SyndPerson>concat(editors, Stream.of(chahoutanAuthor)).toList());
+
+            entry.setAuthor(ChahoutanConfig.AUTHOR);
+            entry.setPublishedDate(Date.from(publishTIme.toInstant()));
 
             items.add(entry);
         }
         feed.setEntries(items);
 
         return feed;
-    }
-
-    private void executeIfGet(String id, Consumer<String> consumer)
-    {
-        this.metadataRepo.findById(id).map(m -> m.text).ifPresent(consumer);
-    }
-
-    private String getOrSave(String id, String def)
-    {
-        return this.metadataRepo.findById(id).orElseGet(() -> this.metadataRepo.save(Metadata.from(id, def))).text;
     }
 }
