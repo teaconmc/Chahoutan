@@ -85,25 +85,26 @@ public class Post
         post.editor = new HashSet<>(editors);
     }
 
-    public static record Request(@JsonProperty(value = "id", required = true) int id,
-                                 @JsonProperty(value = "text", required = true) String text,
-                                 @JsonProperty(value = "editors", required = true) List<String> editors,
-                                 @JsonProperty(value = "images", required = true) List<Image.Request> images)
+    public record Request(@JsonProperty(value = "id", required = true) int id,
+                          @JsonProperty(value = "text", required = true) String text,
+                          @JsonProperty(value = "editors", required = true) List<String> editors,
+                          @JsonProperty(value = "images", required = true) List<Image.Request> images)
     {
+        // nothing here
     }
 
-    public static record Response(@JsonProperty(value = "id") int id,
-                                  @JsonInclude(JsonInclude.Include.NON_NULL)
-                                  @JsonProperty(value = "url") URI url,
-                                  @JsonProperty(value = "type") String type,
-                                  @JsonProperty(value = "title") String title,
-                                  @JsonProperty(value = "text") String text,
-                                  @JsonProperty(value = "revision") UUID revision,
-                                  @JsonProperty(value = "revision_url") URI revisionUrl,
-                                  @JsonInclude(JsonInclude.Include.NON_NULL)
-                                  @JsonProperty(value = "editors") List<String> editors,
-                                  @JsonProperty(value = "images") List<Image.Response> images,
-                                  @JsonProperty(value = "publish_time") OffsetDateTime publishTime)
+    public record Response(@JsonProperty(value = "id") int id,
+                           @JsonInclude(JsonInclude.Include.NON_NULL)
+                           @JsonProperty(value = "url") URI url,
+                           @JsonProperty(value = "type") String type,
+                           @JsonProperty(value = "title") String title,
+                           @JsonProperty(value = "text") String text,
+                           @JsonProperty(value = "revision") UUID revision,
+                           @JsonProperty(value = "revision_url") URI revisionUrl,
+                           @JsonInclude(JsonInclude.Include.NON_NULL)
+                           @JsonProperty(value = "editors") List<String> editors,
+                           @JsonProperty(value = "images") List<Image.Response> images,
+                           @JsonProperty(value = "publish_time") OffsetDateTime publishTime)
     {
         public static Response from(Post post)
         {

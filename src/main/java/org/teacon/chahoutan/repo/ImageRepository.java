@@ -5,4 +5,5 @@ import org.teacon.chahoutan.entity.Image;
 
 public interface ImageRepository extends CrudRepository<Image, String>
 {
+    // nothing here
 }

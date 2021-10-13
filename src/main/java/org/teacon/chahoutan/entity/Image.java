@@ -120,17 +120,18 @@ public class Image
         }
     }
 
-    public static record Request(@JsonProperty(value = "id") @DefaultValue("") String id,
-                                 @JsonProperty(value = "png") @DefaultValue("") String png,
-                                 @JsonProperty(value = "webp") @DefaultValue("") String webp)
+    public record Request(@JsonProperty(value = "id") @DefaultValue("") String id,
+                          @JsonProperty(value = "png") @DefaultValue("") String png,
+                          @JsonProperty(value = "webp") @DefaultValue("") String webp)
     {
+        // nothing here
     }
 
-    public static record Response(@JsonProperty(value = "id") String id,
-                                  @JsonProperty(value = "png") String png,
-                                  @JsonProperty(value = "png_url") URI pngUrl,
-                                  @JsonProperty(value = "webp") String webp,
-                                  @JsonProperty(value = "webp_url") URI webpUrl)
+    public record Response(@JsonProperty(value = "id") String id,
+                           @JsonProperty(value = "png") String png,
+                           @JsonProperty(value = "png_url") URI pngUrl,
+                           @JsonProperty(value = "webp") String webp,
+                           @JsonProperty(value = "webp_url") URI webpUrl)
     {
         public static Response from(Image image)
         {
