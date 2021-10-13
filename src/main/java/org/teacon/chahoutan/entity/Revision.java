@@ -58,7 +58,6 @@ public class Revision
         var node = MD_PARSER.parse(revision.text + editorSignText);
         var stringBuilder = new StringBuilder();
         var html = new HtmlWriter(stringBuilder);
-        html.tag("div");
         MD_HTML_RENDERER.render(node, stringBuilder);
         if (!revision.image.isEmpty())
         {
@@ -67,11 +66,10 @@ public class Revision
             for (Image image : revision.image)
             {
                 var path = "v1/images/" + image.id + ".png";
-                html.tag("img", Map.of("src", urlPrefix.resolve(path).toASCIIString()), true);
+                html.tag("img", Map.of("src", urlPrefix.resolve(path).toASCIIString(), "alt", image.id + ".png"), true);
             }
             html.tag("/p");
         }
-        html.tag("/div");
         return stringBuilder.toString();
     }
 
