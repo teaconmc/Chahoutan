@@ -22,14 +22,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 @Entity
 @Table(name = "chahoutan_posts")
 @Indexed(index = "chahoutan-indexes")
 public class Post
 {
-    private static final Duration POST_DELAY = Duration.ofMillis(302_400_000L);
+    private static final Duration POST_DELAY = Duration.ofMillis(100_800_000L);
 
     private static final ZoneOffset ZONE_OFFSET = ZoneOffset.ofHours(+8);
 
