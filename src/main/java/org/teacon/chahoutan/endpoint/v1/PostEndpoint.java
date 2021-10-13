@@ -83,7 +83,7 @@ public class PostEndpoint
     {
         return this.postRepo.findByIdAndRevisionNotNull(id)
                 .filter(p -> p.id <= Post.getLastPublicPostId(null))
-                .map(p -> p.editor.stream().sorted().toList()).orElseThrow(NotFoundException::new);
+                .map(Post::getSortedEditors).orElseThrow(NotFoundException::new);
     }
 
     @GET
@@ -148,9 +148,8 @@ public class PostEndpoint
     public List<String> setEditors(@PathParam("id") Integer id, @RequestBody List<String> body)
     {
         var post = this.postRepo.findByIdAndRevisionNotNull(id).orElseThrow(NotFoundException::new);
-        post.editor = new HashSet<>(body);
-        this.postRepo.save(post);
-        return post.editor.stream().sorted().toList();
+        Post.setSortedEditors(post, body);
+        return Post.getSortedEditors(this.postRepo.save(post));
     }
 
     @PUT

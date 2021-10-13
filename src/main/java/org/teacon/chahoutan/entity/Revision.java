@@ -52,7 +52,7 @@ public class Revision
 
     public static String toRssHtmlText(Revision revision)
     {
-        var editors = revision.post.editor;
+        var editors = Post.getSortedEditors(revision.post);
         var editorSignText = editors.isEmpty() ? "" : ChahoutanConfig.EDITOR_SIGN_PREFIX +
                 String.join(ChahoutanConfig.EDITOR_SIGN_SEPARATOR, editors) + ChahoutanConfig.EDITOR_SIGN_SUFFIX;
         var node = MD_PARSER.parse(revision.text + editorSignText);
@@ -77,7 +77,7 @@ public class Revision
 
     public static String toRssPlainText(Revision revision)
     {
-        var editors = revision.post.editor;
+        var editors = Post.getSortedEditors(revision.post);
         var editorSignText = editors.isEmpty() ? "" : ChahoutanConfig.EDITOR_SIGN_PREFIX +
                 String.join(ChahoutanConfig.EDITOR_SIGN_SEPARATOR, editors) + ChahoutanConfig.EDITOR_SIGN_SUFFIX;
         var node = MD_PARSER.parse(revision.text + editorSignText);

@@ -103,13 +103,15 @@ public class FeedEndpoint
             description.setValue(Revision.toRssPlainText(post.revision));
             entry.setDescription(description);
 
-            var editors = post.editor.stream().sorted().map(editor ->
+            var editors = new ArrayList<SyndPerson>();
+            for (String editor : Post.getSortedEditors(post))
             {
                 var person = new SyndPersonImpl();
                 person.setName(editor);
-                return person;
-            });
-            entry.setAuthors(Stream.<SyndPerson>concat(editors, Stream.of(chahoutanAuthor)).toList());
+                editors.add(person);
+            }
+            editors.add(chahoutanAuthor);
+            entry.setAuthors(editors);
 
             entry.setAuthor(ChahoutanConfig.AUTHOR);
             entry.setPublishedDate(Date.from(publishTIme.toInstant()));

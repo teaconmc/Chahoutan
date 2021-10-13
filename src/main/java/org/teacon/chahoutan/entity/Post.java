@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Entity
 @Table(name = "chahoutan_posts")
@@ -50,7 +51,7 @@ public class Post
     @ElementCollection
     @Column(columnDefinition = "text", nullable = false)
     @CollectionTable(name = "chahoutan_editors")
-    public Set<String> editor = new HashSet<>();
+    private Set<String> editor = new HashSet<>();
 
     public static Post from(Request request, ImageRepository imageRepo)
     {
@@ -72,6 +73,16 @@ public class Post
     public static OffsetDateTime getPublishTime(Post post)
     {
         return Instant.ofEpochMilli(POST_EPOCH + post.id * POST_INTERVAL).atOffset(ZONE_OFFSET);
+    }
+
+    public static List<String> getSortedEditors(Post post)
+    {
+        return post.editor.stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
+    }
+
+    public static void setSortedEditors(Post post, List<String> editors)
+    {
+        post.editor = new HashSet<>(editors);
     }
 
     public static record Request(@JsonProperty(value = "id", required = true) int id,
