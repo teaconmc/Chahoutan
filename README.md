@@ -28,6 +28,7 @@ java -jar build/libs/Chahoutan-<version>.jar
 
 * `chahoutan-indexes` 目录为茶后谈文本索引。
 * `chahoutan.sqlite3.db` 文件为茶后谈 SQLite 数据库。
+* `chahoutan-spring.log` 文件为 Spring Boot 运行日志。
 * `chahoutan-tokens.txt` 文件为私有 API 鉴权 token 列表。
 
 ## 数据库格式

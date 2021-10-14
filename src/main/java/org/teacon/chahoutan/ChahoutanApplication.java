@@ -14,6 +14,8 @@ public class ChahoutanApplication
     {
         var app = new SpringApplication(ChahoutanApplication.class);
         app.setDefaultProperties(Map.ofEntries(
+                Map.entry("debug", true),
+                Map.entry("logging.file.name", "chahoutan-spring.log"),
                 Map.entry("server.port", 48175),
                 Map.entry("spring.datasource.url", "jdbc:sqlite:chahoutan.sqlite3.db"),
                 Map.entry("spring.jpa.generate-ddl", true),
