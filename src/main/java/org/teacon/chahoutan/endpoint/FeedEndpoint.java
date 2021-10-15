@@ -74,6 +74,12 @@ public class FeedEndpoint
         chahoutanAuthor.setName(ChahoutanConfig.AUTHOR);
         chahoutanAuthor.setEmail(ChahoutanConfig.EMAIL);
 
+        var icon = new SyndImageImpl();
+        icon.setTitle(ChahoutanConfig.TITLE);
+        icon.setDescription(ChahoutanConfig.DESCRIPTION);
+        icon.setUrl(URI.create(ChahoutanConfig.BACKEND_URL_PREFIX).resolve("favicon.ico").toASCIIString());
+
+        feed.setImage(icon);
         feed.setTitle(ChahoutanConfig.TITLE);
         feed.setAuthor(ChahoutanConfig.AUTHOR);
         feed.setAuthors(List.of(chahoutanAuthor));

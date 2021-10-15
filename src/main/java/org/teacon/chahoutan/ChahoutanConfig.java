@@ -12,6 +12,8 @@ import org.teacon.chahoutan.endpoint.v1.RefreshEndpoint;
 import org.teacon.chahoutan.provider.ErrorExceptionMapper;
 import org.teacon.chahoutan.provider.JacksonContextResolver;
 
+import java.util.Base64;
+
 @Component
 public class ChahoutanConfig extends ResourceConfig
 {
@@ -29,6 +31,25 @@ public class ChahoutanConfig extends ResourceConfig
     public static final String EDITOR_SIGN_SUFFIX = "】";
     public static final String EDITOR_SIGN_SEPARATOR = "，";
     public static final String EDITOR_SIGN_PREFIX = "【本期编辑：";
+
+    public static final byte[] ICO_BINARY_WITH_GZIP_COMPRESSED = Base64.getDecoder().decode("H4sICHTyaWECA3RlYWNv" +
+            "bi1mYXZpY29uLmljbwDtWn1oFEcUn8Roq9XaqkixepcIihYFP0JRErmokVosrWgDCkqsX/hJ/1EMVnP5Q0zwKyBIENuqbRW0rSKi" +
+            "UBWJxNbalkYFqR9gPKK2Yls9xXrW643v3f6OHtt172P3crN1XvjdIztv37w3O/PmzdsVooD+KioE/RaLIROE6CuEGEKgS6JOGNc1" +
+            "adKkSZMmTRlTEaEfYWASRhBG5xGjTPYwfIRXCYUu+d2VsInwkCA9hL8IpwjjHfjei3AW+m4SDhH2A7sI2xXAp0k2JXCY8DPsjhHq" +
+            "s/C9gHAcOlhndw+u2XLCNfhQm+G9U3HfCUInD8et/oQbhCihNIP7Pof/KwiVJlSlgcWEVcAKYHEGmEOYTXjX1PeELOLkR/Dlkwz8" +
+            "P+SxeJcOvsvA/zcI6wkNJtQkPVczOE78jb6uI3Z+S2hOwmnCD4TWFLhA+IVwB/ruEnZa2NOUQaycmsPcYBvsvE+Yi/jpBnUmNCKO" +
+            "PyLMVzAv2gffLxGG5qif9wlh9LNOEd95X9gDm3iuv5Lj/rikE0J/Tcg/X8qj/xtgy08d4HuCBmCeJWLaP4SLWN8TO3Cvno41yflF" +
+            "7w4e9xLCbfj/O+JCYjyuIv4U5rB/H9biI5xB8kFlyGlCGP/JWItPMA4/Yr3kgvaij6V5jj8bYcdW09z4GtcfEKa43OcYzPvzCuTF" +
+            "3QhtyDlKTG3VhAjhMeaGW/QlxnayUIPmw56PLdregv+cO/ld6Ksv9F1xMb9xIz9qg119LNqXY3z2uNDXIuiqUSwHWwO7lli08T5w" +
+            "GePTy2E/X6GfYYr5PxAxqTlFnJzkMNf7g/CrQnM/mS6j5lVk0bYE/lc70F8KHV8oWuf4DPaNsGhb5oL/S6FjgaL+18C+6RZtW9A2" +
+            "zoH+euioVNT/D2xi4Em0vebC/BqqqP/vwL6g6XoAsfGsQ/2JnLK/ov6Pg32b8X8BcrTfcEascKg/UeMoVtT/4bCvDc/6btL5eLkL" +
+            "+hN1jkGK+v9e0hk4hnMh71VjXdLfBN1vKup/nQt7nB1VQz/Xb8012FVZgvflhS5gEZ73kxzWYroQDgq16/urczzHClHvqbQA59ZV" +
+            "WWJmFs98hklHqdCkSVM+idfg28+x/+cRh7k+/IIL+dxN7K9dPOI/f2tzC2Ow26EurjE9gK5vnlHXUJH4G7EbKc6KnKv9SZiVQhfn" +
+            "2heha62H1sFR2FxmU0uJQWZlmnWnFo/4zmuVvwHgdw/dbOQ4Tj7E+Wykjdw0oXbdTVjUG9jeY2nIrofshzYyOyAzzyP+V8HexjRk" +
+            "E/V0u3d0rZDxecT/SbD3SAq5ItQo+N3dyzZy56DvdY/4/yJie1TY1woHi/S+ydoJuWUeiv+14t/vRu32Npb5PoWuMshxXtHDI/5z" +
+            "3D+cYm/j90l3ME9KUug7gDEo/5/lyw1J+bId9RDO3t2pSvzNFNen25/jMxPva8X66KxJkyZNmjR1LMlsqS6exsoY1EQNHowEuDEa" +
+            "iASZx/wR4/p/uJR0b08WoZ96voUuNcdvlfI6XWMF9zoR6FqkQMowt82RMsR8TFC2873lAdnC3BeQZ7g/n9/gfn9cp2z0y0Y7viVg" +
+            "8AbwuiC4hBz87AnONsbLHDYD0wreIo0xIB4XD4WjcR6+FzP+j9TGeXvUxHE9FDHkwpGY3+DBOJfRYADc6CgWlNnTUzeNa2s+QgAA");
 
     public static final int VERSION = 1;
 
