@@ -9,6 +9,7 @@ import org.teacon.chahoutan.endpoint.VersionEndpoint;
 import org.teacon.chahoutan.endpoint.v1.ImageEndpoint;
 import org.teacon.chahoutan.endpoint.v1.PostEndpoint;
 import org.teacon.chahoutan.endpoint.v1.RefreshEndpoint;
+import org.teacon.chahoutan.provider.CorsResponseFilter;
 import org.teacon.chahoutan.provider.ErrorExceptionMapper;
 import org.teacon.chahoutan.provider.JacksonContextResolver;
 
@@ -63,6 +64,7 @@ public class ChahoutanConfig extends ResourceConfig
         this.register(RefreshEndpoint.class);
         // providers
         this.register(new RequireAuthFilter());
+        this.register(new CorsResponseFilter());
         this.register(new ErrorExceptionMapper());
         this.register(new JacksonContextResolver());
         this.register(new JacksonJaxbJsonProvider());
