@@ -67,8 +67,13 @@ public class ImageEndpoint
     @RequireAuth
     public Image.Response add(@RequestBody byte[] input)
     {
-        var image = this.imageRepo.save(Image.from(input));
-        return Image.Response.from(image);
+        var id = Image.toHash(input);
+        if (!this.imageRepo.existsById(id))
+        {
+            var image = this.imageRepo.save(Image.from(input, id));
+            return Image.Response.from(image);
+        }
+        throw new ClientErrorException(Response.Status.CONFLICT);
     }
 
     @DELETE

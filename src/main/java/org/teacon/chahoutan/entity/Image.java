@@ -8,6 +8,7 @@ import javax.imageio.ImageIO;
 import javax.persistence.*;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.InternalServerErrorException;
 import java.io.*;
 import java.net.URI;
 import java.security.MessageDigest;
@@ -58,7 +59,26 @@ public class Image
         return Optional.empty();
     }
 
-    public static Image from(byte[] input)
+    public static String toHash(byte[] input)
+    {
+        try
+        {
+            var hash = MessageDigest.getInstance("SHA-256").digest(input);
+            var stringBuilder = new StringBuilder();
+            for (byte b : hash)
+            {
+                stringBuilder.append(HEX_CODES[b >> 4 & 0xF]);
+                stringBuilder.append(HEX_CODES[b & 0xF]);
+            }
+            return stringBuilder.toString();
+        }
+        catch (NoSuchAlgorithmException e)
+        {
+            throw new InternalServerErrorException(e);
+        }
+    }
+
+    public static Image from(byte[] input, String imageId)
     {
         try
         {
@@ -72,22 +92,14 @@ public class Image
                 var param = reader.getDefaultReadParam();
                 var bufferedImage = reader.read(0, param);
 
-                var stringBuilder = new StringBuilder();
-                var hash = MessageDigest.getInstance("SHA-256").digest(input);
-                for (byte b : hash)
-                {
-                    stringBuilder.append(HEX_CODES[b >> 4 & 0xF]);
-                    stringBuilder.append(HEX_CODES[b & 0xF]);
-                }
-
                 var pngOutput = new ByteArrayOutputStream();
                 var webpOutput = new ByteArrayOutputStream();
                 ImageIO.write(bufferedImage, "png", pngOutput);
                 ImageIO.write(bufferedImage, "webp", webpOutput);
 
                 var image = new Image();
+                image.id = imageId;
                 image.uploadTime = Instant.now();
-                image.id = stringBuilder.toString();
                 image.binary = Map.of(
                         "bin", Binary.from(input.clone()),
                         "png", Binary.from(pngOutput.toByteArray()),
@@ -97,7 +109,7 @@ public class Image
             }
             throw new IOException("Unsupported image type");
         }
-        catch (IOException | NoSuchAlgorithmException e)
+        catch (IOException e)
         {
             throw new BadRequestException(e);
         }
