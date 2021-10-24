@@ -5,8 +5,12 @@ import org.hibernate.search.mapper.orm.Search;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.teacon.chahoutan.auth.RequireAuth;
-import org.teacon.chahoutan.entity.Image;
 import org.teacon.chahoutan.entity.Post;
+import org.teacon.chahoutan.entity.Revision;
+import org.teacon.chahoutan.network.ImageRequest;
+import org.teacon.chahoutan.network.ImageResponse;
+import org.teacon.chahoutan.network.PostRequest;
+import org.teacon.chahoutan.network.PostResponse;
 import org.teacon.chahoutan.repo.ImageRepository;
 import org.teacon.chahoutan.repo.PostRepository;
 import org.teacon.chahoutan.repo.RevisionRepository;
@@ -43,13 +47,13 @@ public class PostEndpoint
 
     @GET
     @Transactional
-    public Iterator<Post.Response> iterator(@QueryParam("q") String query, @QueryParam("until") Integer until)
+    public Iterator<PostResponse> iterator(@QueryParam("q") String query, @QueryParam("until") Integer until)
     {
         var lastId = Post.getLastPublicPostId(until);
         if (query == null || query.isEmpty())
         {
             return this.postRepo.findFirst20PostsByIdLessThanEqualAndRevisionNotNullOrderByIdDesc(lastId).stream()
-                    .map(Post.Response::from).iterator();
+                    .map(PostResponse::from).iterator();
         }
         else
         {
@@ -61,25 +65,25 @@ public class PostEndpoint
                             .should(f2 -> f2.match().field("text").matching(query, ValueConvert.NO))
                             .should(f2 -> f2.match().field("editor").matching(query, ValueConvert.NO)))
                     .fetch(20).hits().stream()
-                    .map(Post.Response::from).iterator();
+                    .map(PostResponse::from).iterator();
         }
     }
 
     @GET
     @Path("/{id:[1-9][0-9]*}")
-    public Post.Response get(@PathParam("id") Integer id)
+    public PostResponse get(@PathParam("id") Integer id)
     {
         return this.postRepo.findByIdAndRevisionNotNull(id)
-                .filter(p -> p.id <= Post.getLastPublicPostId(null))
-                .map(Post.Response::from).orElseThrow(NotFoundException::new);
+                .filter(p -> p.getId() <= Post.getLastPublicPostId(null))
+                .map(PostResponse::from).orElseThrow(NotFoundException::new);
     }
 
     @GET
     @Path("/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}}")
-    public Post.Response get(@PathParam("id") UUID id)
+    public PostResponse get(@PathParam("id") UUID id)
     {
         return this.revisionRepo.findById(id)
-                .map(Post.Response::from).orElseThrow(NotFoundException::new);
+                .map(PostResponse::from).orElseThrow(NotFoundException::new);
     }
 
     @GET
@@ -87,33 +91,33 @@ public class PostEndpoint
     public List<String> getEditors(@PathParam("id") Integer id)
     {
         return this.postRepo.findByIdAndRevisionNotNull(id)
-                .filter(p -> p.id <= Post.getLastPublicPostId(null))
-                .map(Post::getSortedEditors).orElseThrow(NotFoundException::new);
+                .filter(p -> p.getId() <= Post.getLastPublicPostId(null))
+                .map(Post::getEditors).orElseThrow(NotFoundException::new);
     }
 
     @GET
     @Path("/{id:[1-9][0-9]*}/images")
-    public List<Image.Response> getImages(@PathParam("id") Integer id)
+    public List<ImageResponse> getImages(@PathParam("id") Integer id)
     {
         return this.postRepo.findByIdAndRevisionNotNull(id)
-                .filter(p -> p.id <= Post.getLastPublicPostId(null))
-                .map(p -> p.revision.image.stream().map(Image.Response::from).toList()).orElseThrow(NotFoundException::new);
+                .filter(p -> p.getId() <= Post.getLastPublicPostId(null))
+                .map(p -> p.getRevision().getImages().stream().map(ImageResponse::from).toList()).orElseThrow(NotFoundException::new);
     }
 
     @GET
     @Path("/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}}/images")
-    public List<Image.Response> getImages(@PathParam("id") UUID id)
+    public List<ImageResponse> getImages(@PathParam("id") UUID id)
     {
         return this.revisionRepo.findById(id)
-                .map(r -> r.image.stream().map(Image.Response::from).toList()).orElseThrow(NotFoundException::new);
+                .map(r -> r.getImages().stream().map(ImageResponse::from).toList()).orElseThrow(NotFoundException::new);
     }
 
     @POST
     @RequireAuth
-    public Post.Response add(@RequestBody Post.Request body)
+    public PostResponse add(@RequestBody PostRequest body)
     {
-        var post = Post.from(body, this.imageRepo);
-        return Post.Response.from(this.postRepo.save(post));
+        var post = body.toPost(this.imageRepo);
+        return PostResponse.from(this.postRepo.save(post));
     }
 
     @DELETE
@@ -122,7 +126,7 @@ public class PostEndpoint
     public Map<String, Void> remove(@PathParam("id") Integer id)
     {
         var post = this.postRepo.findById(id).orElseThrow(NotFoundException::new);
-        post.revision = null; // detach revisions
+        post.setRevision(null); // detach revisions
         this.postRepo.save(post);
         return Map.of();
     }
@@ -130,21 +134,21 @@ public class PostEndpoint
     @GET
     @RequireAuth
     @Path("/{id:[1-9][0-9]*}/revisions")
-    public Iterator<Post.Response> iteratorOfRevisions(@PathParam("id") Integer id)
+    public Iterator<PostResponse> iteratorOfRevisions(@PathParam("id") Integer id)
     {
         return this.postRepo.findById(id).stream()
                 .map(this.revisionRepo::findRevisionsByPostOrderByCreationTimeDesc)
-                .flatMap(List::stream).map(Post.Response::from).iterator();
+                .flatMap(List::stream).map(PostResponse::from).iterator();
     }
 
     @GET
     @RequireAuth
     @Path("/{id:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}}/revisions")
-    public Iterator<Post.Response> iteratorOfRevisions(@PathParam("id") UUID id)
+    public Iterator<PostResponse> iteratorOfRevisions(@PathParam("id") UUID id)
     {
-        return this.revisionRepo.findById(id).stream().map(r -> r.post)
+        return this.revisionRepo.findById(id).stream().map(Revision::getPost)
                 .map(this.revisionRepo::findRevisionsByPostOrderByCreationTimeDesc)
-                .flatMap(List::stream).map(Post.Response::from).iterator();
+                .flatMap(List::stream).map(PostResponse::from).iterator();
     }
 
     @PUT
@@ -153,18 +157,17 @@ public class PostEndpoint
     public List<String> setEditors(@PathParam("id") Integer id, @RequestBody List<String> body)
     {
         var post = this.postRepo.findByIdAndRevisionNotNull(id).orElseThrow(NotFoundException::new);
-        Post.setSortedEditors(post, body);
-        return Post.getSortedEditors(this.postRepo.save(post));
+        post.setEditors(body);
+        return this.postRepo.save(post).getEditors();
     }
 
     @PUT
     @RequireAuth
     @Path("/{id:[1-9][0-9]*}/images")
-    public List<Image.Response> setImages(@PathParam("id") Integer id,  @RequestBody List<Image.Request> body)
+    public List<ImageResponse> setImages(@PathParam("id") Integer id, @RequestBody List<ImageRequest> body)
     {
         var post = this.postRepo.findByIdAndRevisionNotNull(id).orElseThrow(NotFoundException::new);
-        post.revision.image = body.stream()
-                .map(r -> Image.from(r, imageRepo).orElseThrow(BadRequestException::new)).toList();
-        return this.postRepo.save(post).revision.image.stream().map(Image.Response::from).toList();
+        post.getRevision().setImages(body.stream().map(request -> request.toImage(this.imageRepo)).toList());
+        return this.postRepo.save(post).getRevision().getImages().stream().map(ImageResponse::from).toList();
     }
 }

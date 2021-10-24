@@ -6,7 +6,6 @@ import com.rometools.rome.io.SyndFeedOutput;
 import org.springframework.stereotype.Component;
 import org.teacon.chahoutan.ChahoutanConfig;
 import org.teacon.chahoutan.entity.Post;
-import org.teacon.chahoutan.entity.Revision;
 import org.teacon.chahoutan.repo.PostRepository;
 
 import javax.ws.rs.GET;
@@ -91,25 +90,25 @@ public class FeedEndpoint
         for (Post post : this.postRepo.findFirst20PostsByIdLessThanEqualAndRevisionNotNullOrderByIdDesc(lastId))
         {
             var entry = new SyndEntryImpl();
-            var publishTIme = Post.getPublishTime(post);
-            var name = MessageFormat.format(ChahoutanConfig.NAME_PATTERN, post.id, publishTIme.toLocalDate());
+            var publishTIme = post.getPublishTime();
+            var name = MessageFormat.format(ChahoutanConfig.NAME_PATTERN, post.getId(), publishTIme.toLocalDate());
 
             entry.setTitle(name);
-            entry.setUri(post.revision.id.toString());
-            entry.setLink(urlPrefix.resolve(Integer.toString(post.id)).toASCIIString());
+            entry.setUri(post.getRevision().getId().toString());
+            entry.setLink(urlPrefix.resolve(Integer.toString(post.getId())).toASCIIString());
 
             var content = new SyndContentImpl();
             content.setType(MediaType.TEXT_HTML);
-            content.setValue(Revision.toRssHtmlText(post.revision));
+            content.setValue(post.getRevision().getRssHtmlText());
             entry.setContents(List.of(content));
 
             var description = new SyndContentImpl();
             description.setType(MediaType.TEXT_PLAIN);
-            description.setValue(Revision.toRssPlainText(post.revision));
+            description.setValue(post.getRevision().getRssPlainText());
             entry.setDescription(description);
 
             var editors = new ArrayList<SyndPerson>();
-            for (String editor : Post.getSortedEditors(post))
+            for (String editor : post.getEditors())
             {
                 var person = new SyndPersonImpl();
                 person.setName(editor);

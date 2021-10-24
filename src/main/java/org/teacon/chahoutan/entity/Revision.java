@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.util.*;
 
 @Entity
+@Access(AccessType.FIELD)
 @Table(name = "chahoutan_revisions")
 public class Revision
 {
@@ -24,62 +25,94 @@ public class Revision
     @Id
     @GeneratedValue(generator = "UUID")
     @Column(name = "id", nullable = false)
-    public UUID id;
+    private UUID id;
 
     @ManyToOne
     @JoinColumn(name = "post", nullable = false)
-    public Post post = new Post();
+    private Post post = new Post();
 
     @Column(name = "creation_time", nullable = false)
-    public Instant creationTime = Instant.EPOCH;
+    private Instant creationTime = Instant.EPOCH;
 
     @Column(name = "text", columnDefinition = "text", nullable = false)
-    public String text = "";
+    private String text = "";
 
     @ManyToMany
     @OrderColumn(name = "image_ordinal")
     @CollectionTable(name = "chahoutan_post_images", joinColumns = @JoinColumn(name = "revision_id", referencedColumnName = "id"))
-    public List<Image> image = new ArrayList<>();
+    private List<Image> image = new ArrayList<>();
 
-    public static Revision from(Post post, String text)
+    public UUID getId()
     {
-        var revision = new Revision();
-        revision.post = post;
-        revision.creationTime = Instant.now();
-        revision.text = text;
-        return revision;
+        return this.id;
     }
 
-    public static String toRssHtmlText(Revision revision)
+    public Post getPost()
     {
-        var editors = Post.getSortedEditors(revision.post);
+        return this.post;
+    }
+
+    public String getText()
+    {
+        return this.text;
+    }
+
+    public List<Image> getImages()
+    {
+        return List.copyOf(this.image);
+    }
+
+    public String getRssPlainText()
+    {
+        var editors = this.post.getEditors();
         var editorSignText = editors.isEmpty() ? "" : ChahoutanConfig.EDITOR_SIGN_PREFIX +
                 String.join(ChahoutanConfig.EDITOR_SIGN_SEPARATOR, editors) + ChahoutanConfig.EDITOR_SIGN_SUFFIX;
-        var node = MD_PARSER.parse(revision.text + editorSignText);
+        var node = MD_PARSER.parse(this.text + editorSignText);
+        return MD_PLAIN_RENDERER.render(node).strip();
+    }
+
+    public String getRssHtmlText()
+    {
+        var editors = this.post.getEditors();
+        var editorSignText = editors.isEmpty() ? "" : ChahoutanConfig.EDITOR_SIGN_PREFIX +
+                String.join(ChahoutanConfig.EDITOR_SIGN_SEPARATOR, editors) + ChahoutanConfig.EDITOR_SIGN_SUFFIX;
+        var node = MD_PARSER.parse(this.text + editorSignText);
         var stringBuilder = new StringBuilder();
         var html = new HtmlWriter(stringBuilder);
         MD_HTML_RENDERER.render(node, stringBuilder);
-        if (!revision.image.isEmpty())
+        if (!this.image.isEmpty())
         {
             html.tag("p");
             var urlPrefix = URI.create(ChahoutanConfig.BACKEND_URL_PREFIX);
-            for (Image image : revision.image)
+            for (Image image : this.image)
             {
-                var path = "v1/images/" + image.id + ".png";
-                html.tag("img", Map.of("src", urlPrefix.resolve(path).toASCIIString(), "alt", image.id + ".png"), true);
+                var path = "v1/images/" + image.getId() + ".png";
+                var src = urlPrefix.resolve(path).toASCIIString();
+                html.tag("img", Map.of("src", src, "alt", image.getId() + ".png"), true);
             }
             html.tag("/p");
         }
         return stringBuilder.toString();
     }
 
-    public static String toRssPlainText(Revision revision)
+    public void setPost(Post post)
     {
-        var editors = Post.getSortedEditors(revision.post);
-        var editorSignText = editors.isEmpty() ? "" : ChahoutanConfig.EDITOR_SIGN_PREFIX +
-                String.join(ChahoutanConfig.EDITOR_SIGN_SEPARATOR, editors) + ChahoutanConfig.EDITOR_SIGN_SUFFIX;
-        var node = MD_PARSER.parse(revision.text + editorSignText);
-        return MD_PLAIN_RENDERER.render(node).strip();
+        this.post = post;
+    }
+
+    public void setText(String text)
+    {
+        this.text = text;
+    }
+
+    public void setCreationTime(Instant time)
+    {
+        this.creationTime = time;
+    }
+
+    public void setImages(List<Image> image)
+    {
+        this.image = List.copyOf(image);
     }
 
     public static class Bridge implements ValueBridge<Revision, String>
@@ -87,7 +120,7 @@ public class Revision
         @Override
         public String toIndexedValue(Revision value, ValueBridgeToIndexedValueContext context)
         {
-            return value == null ? null : value.text;
+            return value == null ? null : value.getText();
         }
     }
 }
