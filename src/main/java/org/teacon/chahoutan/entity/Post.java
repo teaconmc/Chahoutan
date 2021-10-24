@@ -3,10 +3,7 @@ package org.teacon.chahoutan.entity;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBridgeRef;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 import org.teacon.chahoutan.ChahoutanConfig;
 import org.teacon.chahoutan.repo.ImageRepository;
 
@@ -48,6 +45,7 @@ public class Post
     public Revision revision = null;
 
     @ElementCollection
+    @KeywordField(name = "editor")
     @Column(columnDefinition = "text", nullable = false)
     @CollectionTable(name = "chahoutan_editors")
     private Set<String> editor = new HashSet<>();

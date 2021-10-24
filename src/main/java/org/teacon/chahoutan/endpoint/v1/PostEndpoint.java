@@ -56,8 +56,10 @@ public class PostEndpoint
             var session = Search.session(this.manager);
             return session.search(Post.class)
                     .where(f -> f.bool()
+                            .minimumShouldMatchNumber(1)
                             .must(f2 -> f2.range().field("id").atMost(lastId))
-                            .must(f2 -> f2.match().field("text").matching(query, ValueConvert.NO)))
+                            .should(f2 -> f2.match().field("text").matching(query, ValueConvert.NO))
+                            .should(f2 -> f2.match().field("editor").matching(query, ValueConvert.NO)))
                     .fetch(20).hits().stream()
                     .map(Post.Response::from).iterator();
         }
