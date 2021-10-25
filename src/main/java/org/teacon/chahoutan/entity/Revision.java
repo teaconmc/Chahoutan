@@ -114,7 +114,7 @@ public class Revision
         var index = 0;
         var plainText = this.getRssPlainText();
         var htmlBuilder = new StringBuilder().append("<p>");
-        while (index <= plainText.length())
+        while (index < plainText.length())
         {
             var anchorChosen = "";
             var anchorIndexChosen = plainText.length();
