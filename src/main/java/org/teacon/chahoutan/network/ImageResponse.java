@@ -1,11 +1,13 @@
 package org.teacon.chahoutan.network;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.teacon.chahoutan.ChahoutanConfig;
 import org.teacon.chahoutan.entity.Image;
 
 import java.net.URI;
 
+@JsonInclude(value = JsonInclude.Include.NON_NULL)
 public record ImageResponse(@JsonProperty(value = "id") String id,
                             @JsonProperty(value = "png") String png,
                             @JsonProperty(value = "png_url") URI pngUrl,

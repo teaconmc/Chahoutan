@@ -12,15 +12,14 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
+@JsonInclude(value = JsonInclude.Include.NON_NULL)
 public record PostResponse(@JsonProperty(value = "id") int id,
-                           @JsonInclude(JsonInclude.Include.NON_NULL)
                            @JsonProperty(value = "url") URI url,
                            @JsonProperty(value = "type") String type,
                            @JsonProperty(value = "title") String title,
                            @JsonProperty(value = "text") String text,
                            @JsonProperty(value = "revision") UUID revision,
                            @JsonProperty(value = "revision_url") URI revisionUrl,
-                           @JsonInclude(JsonInclude.Include.NON_NULL)
                            @JsonProperty(value = "editors") List<String> editors,
                            @JsonProperty(value = "images") List<ImageResponse> images,
                            @JsonProperty(value = "publish_time") OffsetDateTime publishTime)
