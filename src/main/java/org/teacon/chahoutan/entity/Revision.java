@@ -173,6 +173,11 @@ public class Revision
         this.text = text;
     }
 
+    public void setCreationTime(Instant time)
+    {
+        this.creationTime = time;
+    }
+
     public void setAnchors(List<String> anchors)
     {
         var entries = new HashMap<String, String>();
@@ -190,11 +195,6 @@ public class Revision
             }
         }
         this.anchors = Map.copyOf(entries);
-    }
-
-    public void setCreationTime(Instant time)
-    {
-        this.creationTime = time;
     }
 
     public void setImages(List<Image> image)

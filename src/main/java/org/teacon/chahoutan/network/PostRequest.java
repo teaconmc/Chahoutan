@@ -12,10 +12,15 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record PostRequest(@JsonProperty(value = "id", required = true) int id,
                           @JsonProperty(value = "text", required = true) String text,
-                          @JsonProperty(value = "editors", required = true) List<String> editors,
-                          @JsonProperty(value = "anchors", required = true) List<String> anchors,
-                          @JsonProperty(value = "images", required = true) List<ImageRequest> images)
+                          @JsonProperty(value = "editors") List<String> editors,
+                          @JsonProperty(value = "anchors") List<String> anchors,
+                          @JsonProperty(value = "images") List<ImageRequest> images)
 {
+    private static <T> List<T> nullToEmpty(List<T> input)
+    {
+        return input == null ? List.of() : input;
+    }
+
     public Post toPost(ImageRepository repo)
     {
         var post = new Post();
@@ -23,13 +28,13 @@ public record PostRequest(@JsonProperty(value = "id", required = true) int id,
 
         post.setId(this.id);
         post.setRevision(revision);
-        post.setEditors(this.editors);
+        post.setEditors(nullToEmpty(this.editors));
 
         revision.setPost(post);
         revision.setText(this.text);
-        revision.setAnchors(this.anchors);
         revision.setCreationTime(Instant.now());
-        revision.setImages(this.images.stream().map(request -> request.toImage(repo)).toList());
+        revision.setAnchors(nullToEmpty(this.anchors));
+        revision.setImages(nullToEmpty(this.images).stream().map(request -> request.toImage(repo)).toList());
 
         return post;
     }
