@@ -8,10 +8,7 @@ import org.teacon.chahoutan.ChahoutanConfig;
 import org.teacon.chahoutan.entity.Post;
 import org.teacon.chahoutan.repo.PostRepository;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.InternalServerErrorException;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.net.URI;
 import java.text.MessageFormat;
@@ -32,11 +29,11 @@ public class FeedEndpoint
     }
 
     @GET
-    public String rss()
+    public String rss(@QueryParam("until") Integer until)
     {
         try
         {
-            var feed = this.getFeed("rss_2.0");
+            var feed = this.getFeed("rss_2.0", until);
             var output = new SyndFeedOutput();
             return output.outputString(feed);
         }
@@ -48,11 +45,11 @@ public class FeedEndpoint
 
     @GET
     @Path("/atom")
-    public String atom()
+    public String atom(@QueryParam("until") Integer until)
     {
         try
         {
-            var feed = this.getFeed("atom_1.0");
+            var feed = this.getFeed("atom_1.0", until);
             var output = new SyndFeedOutput();
             return output.outputString(feed);
         }
@@ -62,7 +59,7 @@ public class FeedEndpoint
         }
     }
 
-    private SyndFeed getFeed(String type)
+    private SyndFeed getFeed(String type, Integer until)
     {
         var feed = new SyndFeedImpl();
         var urlPrefix = URI.create(ChahoutanConfig.FRONTEND_URL_PREFIX);
@@ -86,7 +83,7 @@ public class FeedEndpoint
         feed.setLink(ChahoutanConfig.FRONTEND_URL_PREFIX);
 
         var items = new ArrayList<SyndEntry>(20);
-        var lastId = Post.getLastPublicPostId(null);
+        var lastId = Post.getLastPublicPostId(until);
         for (var post : this.postRepo.findFirst20PostsByIdLessThanEqualAndRevisionNotNullOrderByIdDesc(lastId))
         {
             var entry = new SyndEntryImpl();
