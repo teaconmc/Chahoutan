@@ -82,7 +82,7 @@ public class Revision
         return this.anchors.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getKey).toList();
     }
 
-    public List<String> getAnchorLinks()
+    public List<String> getAnchorUrls()
     {
         return this.anchors.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).toList();
     }
