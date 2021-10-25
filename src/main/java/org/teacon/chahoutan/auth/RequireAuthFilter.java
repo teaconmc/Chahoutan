@@ -40,9 +40,9 @@ public class RequireAuthFilter implements ContainerRequestFilter
             {
                 var stringBuilder = new StringBuilder("# List of tokens arranged in rows\n");
                 var random = new SecureRandom();
-                for (int i = 0; i < 3; i++)
+                for (var i = 0; i < 3; i++)
                 {
-                    for (int j = 0; j < 64; ++j)
+                    for (var j = 0; j < 64; ++j)
                     {
                         stringBuilder.append(HEX_CODES[random.nextInt(16)]);
                     }

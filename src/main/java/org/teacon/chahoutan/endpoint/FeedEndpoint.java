@@ -87,7 +87,7 @@ public class FeedEndpoint
 
         var items = new ArrayList<SyndEntry>(20);
         var lastId = Post.getLastPublicPostId(null);
-        for (Post post : this.postRepo.findFirst20PostsByIdLessThanEqualAndRevisionNotNullOrderByIdDesc(lastId))
+        for (var post : this.postRepo.findFirst20PostsByIdLessThanEqualAndRevisionNotNullOrderByIdDesc(lastId))
         {
             var entry = new SyndEntryImpl();
             var publishTIme = post.getPublishTime();
@@ -108,7 +108,7 @@ public class FeedEndpoint
             entry.setDescription(description);
 
             var editors = new ArrayList<SyndPerson>();
-            for (String editor : post.getEditors())
+            for (var editor : post.getEditors())
             {
                 var person = new SyndPersonImpl();
                 person.setName(editor);

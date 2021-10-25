@@ -1,9 +1,5 @@
 package org.teacon.chahoutan.entity;
 
-import org.commonmark.parser.Parser;
-import org.commonmark.renderer.html.HtmlRenderer;
-import org.commonmark.renderer.html.HtmlWriter;
-import org.commonmark.renderer.text.TextContentRenderer;
 import org.hibernate.search.mapper.pojo.bridge.ValueBridge;
 import org.hibernate.search.mapper.pojo.bridge.runtime.ValueBridgeToIndexedValueContext;
 import org.teacon.chahoutan.ChahoutanConfig;
@@ -18,9 +14,11 @@ import java.util.*;
 @Table(name = "chahoutan_revisions")
 public class Revision
 {
-    private static Parser MD_PARSER = Parser.builder().enabledBlockTypes(Set.of()).build();
-    private static TextContentRenderer MD_PLAIN_RENDERER = TextContentRenderer.builder().stripNewlines(true).build();
-    private static HtmlRenderer MD_HTML_RENDERER = HtmlRenderer.builder().softbreak(" ").percentEncodeUrls(true).build();
+    private static final String REDDIT_ANCHOR = "https://www.reddit.com/r/";
+    private static final String FORGE_ISSUE_ANCHOR = "https://github.com/MinecraftForge/MinecraftForge/issues/";
+
+    private static final Map<String, String> ANCHOR_PREFIXES = Map.of(
+            "http:", "http:", "https:", "https:", "/r/", REDDIT_ANCHOR, "MinecraftForge#", FORGE_ISSUE_ANCHOR);
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -42,6 +40,28 @@ public class Revision
     @CollectionTable(name = "chahoutan_post_images", joinColumns = @JoinColumn(name = "revision_id", referencedColumnName = "id"))
     private List<Image> image = new ArrayList<>();
 
+    @ElementCollection
+    @MapKeyColumn(name = "anchor", columnDefinition = "text")
+    @Column(name = "link", columnDefinition = "text", nullable = false)
+    @CollectionTable(name = "chahoutan_post_anchors", joinColumns = @JoinColumn(name = "revision_id", referencedColumnName = "id"))
+    private Map<String, String> anchors = new HashMap<>();
+
+    private static void escape(String rawInput, int start, int end, StringBuilder htmlBuilder)
+    {
+        for (var i = start; i < end; ++i)
+        {
+            var c = rawInput.charAt(i);
+            switch (c)
+            {
+                case '"' -> htmlBuilder.append("&quot;");
+                case '&' -> htmlBuilder.append("&amp;");
+                case '<' -> htmlBuilder.append("&lt;");
+                case '>' -> htmlBuilder.append("&gt;");
+                default -> htmlBuilder.append(c);
+            }
+        }
+    }
+
     public UUID getId()
     {
         return this.id;
@@ -57,6 +77,16 @@ public class Revision
         return this.text;
     }
 
+    public List<String> getAnchors()
+    {
+        return this.anchors.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getKey).toList();
+    }
+
+    public List<String> getAnchorLinks()
+    {
+        return this.anchors.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).toList();
+    }
+
     public List<Image> getImages()
     {
         return List.copyOf(this.image);
@@ -65,34 +95,72 @@ public class Revision
     public String getRssPlainText()
     {
         var editors = this.post.getEditors();
-        var editorSignText = editors.isEmpty() ? "" : ChahoutanConfig.EDITOR_SIGN_PREFIX +
-                String.join(ChahoutanConfig.EDITOR_SIGN_SEPARATOR, editors) + ChahoutanConfig.EDITOR_SIGN_SUFFIX;
-        var node = MD_PARSER.parse(this.text + editorSignText);
-        return MD_PLAIN_RENDERER.render(node).strip();
+        if (!editors.isEmpty())
+        {
+            var textBuilder = new StringBuilder(this.text);
+            var prefix = ChahoutanConfig.EDITOR_SIGN_PREFIX;
+            for (var editor : editors)
+            {
+                textBuilder.append(prefix).append(editor);
+                prefix = ChahoutanConfig.EDITOR_SIGN_SEPARATOR;
+            }
+            return textBuilder.append(ChahoutanConfig.EDITOR_SIGN_SUFFIX).toString();
+        }
+        return this.text;
     }
 
     public String getRssHtmlText()
     {
-        var editors = this.post.getEditors();
-        var editorSignText = editors.isEmpty() ? "" : ChahoutanConfig.EDITOR_SIGN_PREFIX +
-                String.join(ChahoutanConfig.EDITOR_SIGN_SEPARATOR, editors) + ChahoutanConfig.EDITOR_SIGN_SUFFIX;
-        var node = MD_PARSER.parse(this.text + editorSignText);
-        var stringBuilder = new StringBuilder();
-        var html = new HtmlWriter(stringBuilder);
-        MD_HTML_RENDERER.render(node, stringBuilder);
+        var index = 0;
+        var plainText = this.getRssPlainText();
+        var htmlBuilder = new StringBuilder().append("<p>");
+        while (index <= plainText.length())
+        {
+            var anchorChosen = "";
+            var anchorIndexChosen = plainText.length();
+            for (var anchor : this.anchors.keySet())
+            {
+                var anchorIndex = plainText.indexOf(anchor, index);
+                if (anchorIndex >= index && anchorIndex <= anchorIndexChosen)
+                {
+                    if (anchorIndex < anchorIndexChosen || anchor.length() > anchorChosen.length())
+                    {
+                        anchorChosen = anchor;
+                        anchorIndexChosen = anchorIndex;
+                    }
+                }
+            }
+            if (anchorChosen.isEmpty())
+            {
+                escape(plainText, index, index = plainText.length(), htmlBuilder);
+            }
+            else
+            {
+                var link = this.anchors.get(anchorChosen);
+                escape(plainText, index, anchorIndexChosen, htmlBuilder);
+                htmlBuilder.append("<a href=\"");
+                escape(link, 0, link.length(), htmlBuilder);
+                htmlBuilder.append("\">");
+                escape(plainText, anchorIndexChosen, index = anchorIndexChosen + anchorChosen.length(), htmlBuilder);
+                htmlBuilder.append("</a>");
+            }
+        }
         if (!this.image.isEmpty())
         {
-            html.tag("p");
+            htmlBuilder.append("</p><p>");
             var urlPrefix = URI.create(ChahoutanConfig.BACKEND_URL_PREFIX);
-            for (Image image : this.image)
+            for (var image : this.image)
             {
-                var path = "v1/images/" + image.getId() + ".png";
-                var src = urlPrefix.resolve(path).toASCIIString();
-                html.tag("img", Map.of("src", src, "alt", image.getId() + ".png"), true);
+                var file = image.getId() + ".png";
+                var src = urlPrefix.resolve("v1/images/" + file).toASCIIString();
+                htmlBuilder.append("<img src=\"");
+                escape(src, 0, src.length(), htmlBuilder);
+                htmlBuilder.append("\" alt=\"");
+                escape(file, 0, file.length(), htmlBuilder);
+                htmlBuilder.append("\">");
             }
-            html.tag("/p");
         }
-        return stringBuilder.toString();
+        return htmlBuilder.append("</p>").toString();
     }
 
     public void setPost(Post post)
@@ -103,6 +171,25 @@ public class Revision
     public void setText(String text)
     {
         this.text = text;
+    }
+
+    public void setAnchors(List<String> anchors)
+    {
+        var entries = new HashMap<String, String>();
+        for (var anchor: anchors)
+        {
+            for (var entry : ANCHOR_PREFIXES.entrySet())
+            {
+                var prefix = entry.getKey();
+                if (anchor.startsWith(prefix))
+                {
+                    var link = entry.getValue() + anchor.substring(prefix.length());
+                    entries.put(anchor, link);
+                    break;
+                }
+            }
+        }
+        this.anchors = Map.copyOf(entries);
     }
 
     public void setCreationTime(Instant time)

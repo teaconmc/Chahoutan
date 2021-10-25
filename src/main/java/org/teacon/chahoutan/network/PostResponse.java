@@ -21,6 +21,8 @@ public record PostResponse(@JsonProperty(value = "id") int id,
                            @JsonProperty(value = "revision") UUID revision,
                            @JsonProperty(value = "revision_url") URI revisionUrl,
                            @JsonProperty(value = "editors") List<String> editors,
+                           @JsonProperty(value = "anchors") List<String> anchors,
+                           @JsonProperty(value = "anchor_links") List<String> links,
                            @JsonProperty(value = "images") List<ImageResponse> images,
                            @JsonProperty(value = "publish_time") OffsetDateTime publishTime)
 {
@@ -35,7 +37,8 @@ public record PostResponse(@JsonProperty(value = "id") int id,
         var name = MessageFormat.format(ChahoutanConfig.NAME_PATTERN, post.getId(), publishTime.toLocalDate());
         var editors = post.getEditors().stream().sorted().toList();
         var images = revision.getImages().stream().map(ImageResponse::from).toList();
-        return new PostResponse(post.getId(), url, type, name, revision.getText(), revision.getId(), revisionUrl, editors, images, publishTime);
+        return new PostResponse(post.getId(), url, type, name, revision.getText(), revision.getId(),
+                revisionUrl, editors, revision.getAnchors(), revision.getAnchorLinks(), images, publishTime);
     }
 
     public static PostResponse from(Revision revision)
@@ -50,6 +53,7 @@ public record PostResponse(@JsonProperty(value = "id") int id,
         var name = MessageFormat.format(ChahoutanConfig.NAME_PATTERN, post.getId(), publishTime.toLocalDate());
         var editors = isPost ? post.getEditors().stream().sorted().toList() : null;
         var images = revision.getImages().stream().map(ImageResponse::from).toList();
-        return new PostResponse(post.getId(), url, type, name, revision.getText(), revision.getId(), revisionUrl, editors, images, publishTime);
+        return new PostResponse(post.getId(), url, type, name, revision.getText(), revision.getId(),
+                revisionUrl, editors, revision.getAnchors(), revision.getAnchorLinks(), images, publishTime);
     }
 }

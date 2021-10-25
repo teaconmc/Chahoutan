@@ -1,8 +1,6 @@
 package org.teacon.chahoutan.entity;
 
 import javax.persistence.*;
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,7 +12,6 @@ import java.util.Map;
 @Table(name = "chahoutan_images")
 public class Image
 {
-
     @Id
     @Column(name = "id", nullable = false, length = 64)
     private String id;
@@ -24,8 +21,9 @@ public class Image
 
     @ElementCollection
     @MapKeyColumn(name = "suffix", length = 16)
+    @Column(name = "binary", columnDefinition = "blob", nullable = false)
     @CollectionTable(name = "chahoutan_image_binaries", joinColumns = @JoinColumn(name = "image_id", referencedColumnName = "id"))
-    private Map<String, Binary> binary = new HashMap<>();
+    private Map<String, byte[]> binaries = new HashMap<>();
 
     @ManyToMany
     @OrderBy("creationTime DESC")
@@ -37,9 +35,9 @@ public class Image
         return this.id;
     }
 
-    public Map<String, Binary> getBinaries()
+    public Map<String, byte[]> getBinaries()
     {
-        return Map.copyOf(this.binary);
+        return Map.copyOf(this.binaries);
     }
 
     public List<Revision> getRevisions()
@@ -57,25 +55,8 @@ public class Image
         this.uploadTime = uploadTime;
     }
 
-    public void setBinaries(Map<String, Binary> binary)
+    public void setBinaries(Map<String, byte[]> binary)
     {
-        this.binary = Map.copyOf(binary);
-    }
-
-    @Embeddable
-    public static class Binary implements Serializable
-    {
-        @Serial
-        private static final long serialVersionUID = -6119251919351052273L;
-
-        @Column(columnDefinition = "blob", nullable = false)
-        public byte[] binary = new byte[0];
-
-        public static Binary from(byte[] binary)
-        {
-            var result = new Binary();
-            result.binary = binary;
-            return result;
-        }
+        this.binaries = Map.copyOf(binary);
     }
 }

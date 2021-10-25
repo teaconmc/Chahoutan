@@ -51,7 +51,7 @@ public class ImageEndpoint
     public Response getPng(@PathParam("id") String id)
     {
         var image = this.imageRepo.findById(id).orElseThrow(NotFoundException::new);
-        return Response.ok(image.getBinaries().getOrDefault("png", new Image.Binary()).binary, "image/png").build();
+        return Response.ok(image.getBinaries().getOrDefault("png", new byte[0]), "image/png").build();
     }
 
     @GET
@@ -59,7 +59,7 @@ public class ImageEndpoint
     public Response getWebp(@PathParam("id") String id)
     {
         var image = this.imageRepo.findById(id).orElseThrow(NotFoundException::new);
-        return Response.ok(image.getBinaries().getOrDefault("webp", new Image.Binary()).binary, "image/webp").build();
+        return Response.ok(image.getBinaries().getOrDefault("webp", new byte[0]), "image/webp").build();
     }
 
     @GET
@@ -108,7 +108,7 @@ public class ImageEndpoint
         {
             var hash = MessageDigest.getInstance("SHA-256").digest(input);
             var stringBuilder = new StringBuilder();
-            for (byte b : hash)
+            for (var b : hash)
             {
                 stringBuilder.append(HEX_CODES[b >> 4 & 0xF]);
                 stringBuilder.append(HEX_CODES[b & 0xF]);
@@ -143,10 +143,10 @@ public class ImageEndpoint
                 var image = new Image();
                 image.setId(imageId);
                 image.setUploadTime(Instant.now());
-                image.setBinaries(Map.of(
-                        "bin", Image.Binary.from(input.clone()),
-                        "png", Image.Binary.from(pngOutput.toByteArray()),
-                        "webp", Image.Binary.from(webpOutput.toByteArray())));
+
+                var pngBytes = pngOutput.toByteArray();
+                var webpBytes = webpOutput.toByteArray();
+                image.setBinaries(Map.of("bin", input.clone(), "png", pngBytes, "webp", webpBytes));
 
                 return image;
             }

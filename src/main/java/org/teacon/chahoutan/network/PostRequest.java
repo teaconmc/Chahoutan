@@ -13,6 +13,7 @@ import java.util.List;
 public record PostRequest(@JsonProperty(value = "id", required = true) int id,
                           @JsonProperty(value = "text", required = true) String text,
                           @JsonProperty(value = "editors", required = true) List<String> editors,
+                          @JsonProperty(value = "anchors", required = true) List<String> anchors,
                           @JsonProperty(value = "images", required = true) List<ImageRequest> images)
 {
     public Post toPost(ImageRepository repo)
@@ -26,6 +27,7 @@ public record PostRequest(@JsonProperty(value = "id", required = true) int id,
 
         revision.setPost(post);
         revision.setText(this.text);
+        revision.setAnchors(this.anchors);
         revision.setCreationTime(Instant.now());
         revision.setImages(this.images.stream().map(request -> request.toImage(repo)).toList());
 

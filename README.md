@@ -55,6 +55,14 @@ create table chahoutan_images
     upload_time datetime not null
 );
 
+create table chahoutan_post_anchors
+(
+    revision_id blob not null,
+    link text not null,
+    anchor text not null,
+    primary key (revision_id, anchor)
+);
+
 create table chahoutan_post_images
 (
     revision_id blob not null,
