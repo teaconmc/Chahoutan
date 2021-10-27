@@ -17,8 +17,8 @@ public class Revision
     private static final String REDDIT_ANCHOR = "https://www.reddit.com/r/";
     private static final String FORGE_ISSUE_ANCHOR = "https://github.com/MinecraftForge/MinecraftForge/issues/";
 
-    private static final Map<String, String> ANCHOR_PREFIXES = Map.of(
-            "http:", "http:", "https:", "https:", "/r/", REDDIT_ANCHOR, "MinecraftForge#", FORGE_ISSUE_ANCHOR);
+    private static final Map<String, String> ANCHOR_PREFIXES = Map.of("http:", "http:", "https:", "https:",
+            "/r/", REDDIT_ANCHOR, "MinecraftForge#", FORGE_ISSUE_ANCHOR, "茶后谈#", ChahoutanConfig.FRONTEND_URL_PREFIX);
 
     @Id
     @GeneratedValue(generator = "UUID")
