@@ -2,12 +2,11 @@ package org.teacon.chahoutan.entity;
 
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBridgeRef;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
+import org.teacon.chahoutan.ChahoutanConfig;
 
 import javax.persistence.*;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,13 +17,8 @@ import java.util.Set;
 @Indexed(index = "chahoutan-indexes")
 public class Post
 {
-    private static final Duration POST_DELAY = Duration.ofMillis(100_800_000L);
-
-    private static final ZoneOffset ZONE_OFFSET = ZoneOffset.ofHours(+8);
-
-    private static final long POST_EPOCH = 1_611_920_400_000L;
-
-    private static final long POST_INTERVAL = 201_600_000L;
+    private static final long POST_EPOCH_MILLIS = ChahoutanConfig.POST_EPOCH.toEpochMilli();
+    private static final long POST_INTERVAL_MILLIS = ChahoutanConfig.POST_INTERVAL.toMillis();
 
     @Id
     @DocumentId
@@ -45,7 +39,8 @@ public class Post
 
     public static int getLastPublicPostId(Integer until)
     {
-        var id = Math.floorDiv(Instant.now().minus(POST_DELAY).toEpochMilli() - POST_EPOCH, POST_INTERVAL);
+        var millis = Instant.now().minus(ChahoutanConfig.POST_DELAY).toEpochMilli();
+        var id = Math.floorDiv(millis - POST_EPOCH_MILLIS, POST_INTERVAL_MILLIS);
         return Math.toIntExact(until == null ? id : Math.min(id, until));
     }
 
@@ -66,7 +61,8 @@ public class Post
 
     public OffsetDateTime getPublishTime()
     {
-        return Instant.ofEpochMilli(POST_EPOCH + this.getId() * POST_INTERVAL).atOffset(ZONE_OFFSET);
+        var millis = POST_EPOCH_MILLIS + this.getId() * POST_INTERVAL_MILLIS;
+        return Instant.ofEpochMilli(millis).atOffset(ChahoutanConfig.POST_ZONE_OFFSET);
     }
 
     public void setId(Integer id)

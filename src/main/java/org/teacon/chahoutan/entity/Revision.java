@@ -14,11 +14,14 @@ import java.util.*;
 @Table(name = "chahoutan_revisions")
 public class Revision
 {
-    private static final String REDDIT_ANCHOR = "https://www.reddit.com/r/";
-    private static final String FORGE_ISSUE_ANCHOR = "https://github.com/MinecraftForge/MinecraftForge/issues/";
+    private static final String HTTP_SCHEME = "http:";
+    private static final String HTTPS_SCHEME = "https:";
 
-    private static final Map<String, String> ANCHOR_PREFIXES = Map.of("http:", "http:", "https:", "https:",
-            "/r/", REDDIT_ANCHOR, "MinecraftForge#", FORGE_ISSUE_ANCHOR, "茶后谈#", ChahoutanConfig.FRONTEND_URL_PREFIX);
+    private static final Map<String, String> ANCHOR_PREFIXES = Map.of(
+            HTTP_SCHEME, HTTP_SCHEME, HTTPS_SCHEME, HTTPS_SCHEME,
+            ChahoutanConfig.ANCHOR_PREFIX, ChahoutanConfig.FRONTEND_URL_PREFIX,
+            ChahoutanConfig.ANCHOR_FORGE_PREFIX, ChahoutanConfig.ANCHOR_FORGE_URL_PREFIX,
+            ChahoutanConfig.ANCHOR_REDDIT_PREFIX, ChahoutanConfig.ANCHOR_REDDIT_URL_PREFIX);
 
     @Id
     @GeneratedValue(generator = "UUID")

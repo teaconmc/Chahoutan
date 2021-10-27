@@ -13,6 +13,9 @@ import org.teacon.chahoutan.provider.CorsResponseFilter;
 import org.teacon.chahoutan.provider.ErrorExceptionMapper;
 import org.teacon.chahoutan.provider.JacksonContextResolver;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Base64;
 
 @Component
@@ -29,9 +32,20 @@ public class ChahoutanConfig extends ResourceConfig
     public static final String BACKEND_URL_PREFIX = "https://chahoutan.teacon.cn/";
     public static final String FRONTEND_URL_PREFIX = "https://www.teacon.cn/chahoutan/";
 
+    public static final String ANCHOR_PREFIX = "茶后谈#";
+    public static final String ANCHOR_REDDIT_PREFIX = "/r/";
+    public static final String ANCHOR_FORGE_PREFIX = "MinecraftForge#";
+    public static final String ANCHOR_REDDIT_URL_PREFIX = "https://www.reddit.com/r/";
+    public static final String ANCHOR_FORGE_URL_PREFIX = "https://github.com/MinecraftForge/MinecraftForge/issues/";
+
     public static final String EDITOR_SIGN_SUFFIX = "】";
     public static final String EDITOR_SIGN_SEPARATOR = "，";
     public static final String EDITOR_SIGN_PREFIX = "【本期编辑：";
+
+    public static final Duration POST_DELAY = Duration.ofHours(28);
+    public static final Duration POST_INTERVAL = Duration.ofHours(56);
+    public static final ZoneOffset POST_ZONE_OFFSET = ZoneOffset.ofHours(+8);
+    public static final Instant POST_EPOCH = Instant.parse("2021-01-29T19:40:00+08:00");
 
     public static final byte[] ICO_BINARY_WITH_GZIP_COMPRESSED = Base64.getDecoder().decode("H4sICHTyaWECA3RlYWNv" +
             "bi1mYXZpY29uLmljbwDtWn1oFEcUn8Roq9XaqkixepcIihYFP0JRErmokVosrWgDCkqsX/hJ/1EMVnP5Q0zwKyBIENuqbRW0rSKi" +
