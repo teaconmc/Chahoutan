@@ -18,7 +18,6 @@ import java.util.List;
 
 @Component
 @Path("/feed")
-@Produces("application/rss+xml; charset=utf-8")
 public class FeedEndpoint
 {
     private final PostRepository postRepo;
@@ -29,6 +28,7 @@ public class FeedEndpoint
     }
 
     @GET
+    @Produces("application/rss+xml; charset=utf-8")
     public String rss(@QueryParam("until") Integer until)
     {
         try
@@ -45,6 +45,7 @@ public class FeedEndpoint
 
     @GET
     @Path("/atom")
+    @Produces("application/atom+xml; charset=utf-8")
     public String atom(@QueryParam("until") Integer until)
     {
         try
