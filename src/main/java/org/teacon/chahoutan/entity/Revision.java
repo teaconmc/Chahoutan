@@ -6,6 +6,7 @@ import org.teacon.chahoutan.ChahoutanConfig;
 
 import javax.persistence.*;
 import java.net.URI;
+import java.text.MessageFormat;
 import java.time.Instant;
 import java.util.*;
 
@@ -73,6 +74,12 @@ public class Revision
     public Post getPost()
     {
         return this.post;
+    }
+
+    public String getTitle()
+    {
+        var time = this.post.getPublishTime().toLocalDate();
+        return MessageFormat.format(ChahoutanConfig.NAME_PATTERN, this.post.getId(), time);
     }
 
     public String getText()
@@ -184,7 +191,7 @@ public class Revision
     public void setAnchors(List<String> anchors)
     {
         var entries = new HashMap<String, String>();
-        for (var anchor: anchors)
+        for (var anchor : anchors)
         {
             for (var entry : ANCHOR_PREFIXES.entrySet())
             {
@@ -205,12 +212,21 @@ public class Revision
         this.image = List.copyOf(image);
     }
 
-    public static class Bridge implements ValueBridge<Revision, String>
+    public static class TextBridge implements ValueBridge<Revision, String>
     {
         @Override
         public String toIndexedValue(Revision value, ValueBridgeToIndexedValueContext context)
         {
             return value == null ? null : value.getText();
+        }
+    }
+
+    public static class TitleBridge implements ValueBridge<Revision, String>
+    {
+        @Override
+        public String toIndexedValue(Revision value, ValueBridgeToIndexedValueContext context)
+        {
+            return value == null ? null : value.getTitle();
         }
     }
 }

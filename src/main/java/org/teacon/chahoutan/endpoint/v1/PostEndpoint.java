@@ -63,7 +63,8 @@ public class PostEndpoint
                             .minimumShouldMatchNumber(1)
                             .must(f2 -> f2.range().field("id").atMost(lastId))
                             .should(f2 -> f2.match().field("text").matching(query, ValueConvert.NO))
-                            .should(f2 -> f2.match().field("editor").matching(query, ValueConvert.NO)))
+                            .should(f2 -> f2.match().field("editor").matching(query, ValueConvert.NO).boost(10.0f))
+                            .should(f2 -> f2.match().field("title").matching(query, ValueConvert.NO).boost(100.0f)))
                     .fetch(20).hits().stream()
                     .map(PostResponse::from).iterator();
         }

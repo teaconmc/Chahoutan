@@ -28,7 +28,8 @@ public class Post
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "revision_id")
-    @FullTextField(name = "text", analyzer = "smartcn", valueBridge = @ValueBridgeRef(type = Revision.Bridge.class))
+    @FullTextField(name = "text", analyzer = "smartcn", valueBridge = @ValueBridgeRef(type = Revision.TextBridge.class))
+    @FullTextField(name = "title", analyzer = "standard", valueBridge = @ValueBridgeRef(type = Revision.TitleBridge.class))
     private Revision revision = null;
 
     @ElementCollection

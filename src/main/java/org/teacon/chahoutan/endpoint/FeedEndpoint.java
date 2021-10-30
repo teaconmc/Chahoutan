@@ -11,7 +11,6 @@ import org.teacon.chahoutan.repo.PostRepository;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.net.URI;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -89,9 +88,8 @@ public class FeedEndpoint
         {
             var entry = new SyndEntryImpl();
             var publishTIme = post.getPublishTime();
-            var name = MessageFormat.format(ChahoutanConfig.NAME_PATTERN, post.getId(), publishTIme.toLocalDate());
 
-            entry.setTitle(name);
+            entry.setTitle(post.getRevision().getTitle());
             entry.setUri(post.getRevision().getId().toString());
             entry.setLink(urlPrefix.resolve(Integer.toString(post.getId())).toASCIIString());
 
@@ -124,4 +122,5 @@ public class FeedEndpoint
 
         return feed;
     }
+
 }

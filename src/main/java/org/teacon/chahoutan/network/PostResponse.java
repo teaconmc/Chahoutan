@@ -7,7 +7,6 @@ import org.teacon.chahoutan.entity.Post;
 import org.teacon.chahoutan.entity.Revision;
 
 import java.net.URI;
-import java.text.MessageFormat;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -29,31 +28,31 @@ public record PostResponse(@JsonProperty(value = "id") int id,
     public static PostResponse from(Post post)
     {
         var revision = post.getRevision();
+        var revisionName = revision.getTitle();
         var publishTime = post.getPublishTime();
         var urlPrefix = URI.create(ChahoutanConfig.BACKEND_URL_PREFIX);
         var url = urlPrefix.resolve("v1/posts/" + post.getId());
         var revisionUrl = urlPrefix.resolve("v1/posts/" + revision.getId());
         var type = post.getId() <= Post.getLastPublicPostId(null) ? "post" : "draft";
-        var name = MessageFormat.format(ChahoutanConfig.NAME_PATTERN, post.getId(), publishTime.toLocalDate());
         var editors = post.getEditors().stream().sorted().toList();
         var images = revision.getImages().stream().map(ImageResponse::from).toList();
-        return new PostResponse(post.getId(), url, type, name, revision.getText(), revision.getId(),
+        return new PostResponse(post.getId(), url, type, revisionName, revision.getText(), revision.getId(),
                 revisionUrl, editors, revision.getAnchors(), revision.getAnchorUrls(), images, publishTime);
     }
 
     public static PostResponse from(Revision revision)
     {
         var post = revision.getPost();
+        var revisionName = revision.getTitle();
         var publishTime = post.getPublishTime();
         var isPost = post.getRevision() != null && post.getRevision().getId().equals(revision.getId());
         var urlPrefix = URI.create(ChahoutanConfig.BACKEND_URL_PREFIX);
         var url = isPost ? urlPrefix.resolve("v1/posts/" + post.getId()) : null;
         var revisionUrl = urlPrefix.resolve("v1/posts/" + revision.getId());
         var type = isPost ? post.getId() <= Post.getLastPublicPostId(null) ? "post" : "draft" : "revision";
-        var name = MessageFormat.format(ChahoutanConfig.NAME_PATTERN, post.getId(), publishTime.toLocalDate());
         var editors = isPost ? post.getEditors().stream().sorted().toList() : null;
         var images = revision.getImages().stream().map(ImageResponse::from).toList();
-        return new PostResponse(post.getId(), url, type, name, revision.getText(), revision.getId(),
+        return new PostResponse(post.getId(), url, type, revisionName, revision.getText(), revision.getId(),
                 revisionUrl, editors, revision.getAnchors(), revision.getAnchorUrls(), images, publishTime);
     }
 }
