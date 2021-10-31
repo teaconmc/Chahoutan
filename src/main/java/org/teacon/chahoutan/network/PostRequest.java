@@ -8,6 +8,7 @@ import org.teacon.chahoutan.repo.ImageRepository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Stream;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record PostRequest(@JsonProperty(value = "id", required = true) int id,
@@ -16,9 +17,14 @@ public record PostRequest(@JsonProperty(value = "id", required = true) int id,
                           @JsonProperty(value = "anchors") List<String> anchors,
                           @JsonProperty(value = "images") List<ImageRequest> images)
 {
-    private static <T> List<T> nullToEmpty(List<T> input)
+    private static <T> Stream<T> nullToEmpty(List<T> input)
     {
-        return input == null ? List.of() : input;
+        return input == null ? Stream.empty() : input.stream();
+    }
+
+    private static String normalize(String text)
+    {
+        return String.join("\u00a0", text.split("\\s"));
     }
 
     public Post toPost(ImageRepository repo)
@@ -28,13 +34,13 @@ public record PostRequest(@JsonProperty(value = "id", required = true) int id,
 
         post.setId(this.id);
         post.setRevision(revision);
-        post.setEditors(nullToEmpty(this.editors));
+        post.setEditors(nullToEmpty(this.editors).toList());
 
         revision.setPost(post);
-        revision.setText(this.text);
+        revision.setText(normalize(this.text));
         revision.setCreationTime(Instant.now());
-        revision.setAnchors(nullToEmpty(this.anchors));
-        revision.setImages(nullToEmpty(this.images).stream().map(request -> request.toImage(repo)).toList());
+        revision.setAnchors(nullToEmpty(this.anchors).map(PostRequest::normalize).toList());
+        revision.setImages(nullToEmpty(this.images).map(request -> request.toImage(repo)).toList());
 
         return post;
     }
