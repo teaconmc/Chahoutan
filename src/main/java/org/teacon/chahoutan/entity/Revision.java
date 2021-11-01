@@ -57,6 +57,7 @@ public class Revision
             var c = rawInput.charAt(i);
             switch (c)
             {
+                case '\u00a0' -> htmlBuilder.append("\u0020");
                 case '"' -> htmlBuilder.append("&quot;");
                 case '&' -> htmlBuilder.append("&amp;");
                 case '<' -> htmlBuilder.append("&lt;");
@@ -123,7 +124,9 @@ public class Revision
     {
         var index = 0;
         var plainText = this.getRssPlainText();
-        var htmlBuilder = new StringBuilder().append("<p>");
+        var anchorNodeStyle = "word-break: break-all;";
+        var textNodeStyle = "overflow-wrap: break-word; text-align: justify; white-space: pre-wrap;";
+        var htmlBuilder = new StringBuilder().append("<p style=\"").append(textNodeStyle).append("\">");
         while (index < plainText.length())
         {
             var anchorChosen = "";
@@ -148,7 +151,7 @@ public class Revision
             {
                 var link = this.anchors.get(anchorChosen);
                 escape(plainText, index, anchorIndexChosen, htmlBuilder);
-                htmlBuilder.append("<a href=\"");
+                htmlBuilder.append("<a style=\"").append(anchorNodeStyle).append("\" href=\"");
                 escape(link, 0, link.length(), htmlBuilder);
                 htmlBuilder.append("\">");
                 escape(plainText, anchorIndexChosen, index = anchorIndexChosen + anchorChosen.length(), htmlBuilder);
