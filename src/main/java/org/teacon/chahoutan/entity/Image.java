@@ -42,7 +42,7 @@ public class Image
     @CollectionTable(name = "chahoutan_post_images", joinColumns = @JoinColumn(name = "image_id", referencedColumnName = "id"))
     private List<Revision> revision = new ArrayList<>();
 
-    public static Image from(byte[] input, String imageId)
+    public static Image from(byte[] input, String imageId, List<Revision> revisions)
     {
         try
         {
@@ -72,6 +72,8 @@ public class Image
                 var pngBytes = pngOutput.toByteArray();
                 var webpBytes = webpOutput.toByteArray();
                 image.setBinaries(Map.of("bin", input.clone(), "png", pngBytes, "webp", webpBytes));
+
+                image.setRevisions(revisions);
 
                 return image;
             }
@@ -131,5 +133,10 @@ public class Image
     public void setBinaries(Map<String, byte[]> binary)
     {
         this.binaries = Map.copyOf(binary);
+    }
+
+    public void setRevisions(List<Revision> revisions)
+    {
+        this.revision = List.copyOf(revisions);
     }
 }

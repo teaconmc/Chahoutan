@@ -67,7 +67,7 @@ public class RefreshEndpoint
                 for (var image : this.imageRepo.findAll())
                 {
                     var binary = image.getBinaries().getOrDefault("bin", new byte[0]);
-                    this.imageRepo.save(Image.from(binary, image.getId()));
+                    this.imageRepo.save(Image.from(binary, image.getId(), image.getRevisions()));
                 }
             }).whenComplete((v, e) ->
             {

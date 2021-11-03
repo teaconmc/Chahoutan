@@ -17,6 +17,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -76,7 +77,7 @@ public class ImageEndpoint
         var id = getHash(input);
         if (!this.imageRepo.existsById(id))
         {
-            var image = this.imageRepo.save(Image.from(input, id));
+            var image = this.imageRepo.save(Image.from(input, id, List.of()));
             return ImageResponse.from(image);
         }
         throw new ClientErrorException(Response.Status.CONFLICT);
