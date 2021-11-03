@@ -9,17 +9,12 @@ import org.teacon.chahoutan.network.ImageResponse;
 import org.teacon.chahoutan.network.PostResponse;
 import org.teacon.chahoutan.repo.ImageRepository;
 
-import javax.imageio.ImageIO;
 import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.Instant;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -81,7 +76,7 @@ public class ImageEndpoint
         var id = getHash(input);
         if (!this.imageRepo.existsById(id))
         {
-            var image = this.imageRepo.save(getImage(input, id));
+            var image = this.imageRepo.save(Image.from(input, id));
             return ImageResponse.from(image);
         }
         throw new ClientErrorException(Response.Status.CONFLICT);
@@ -102,7 +97,7 @@ public class ImageEndpoint
         throw new BadRequestException("The revision of image is not empty");
     }
 
-    private String getHash(byte[] input)
+    private static String getHash(byte[] input)
     {
         try
         {
@@ -121,40 +116,4 @@ public class ImageEndpoint
         }
     }
 
-    private Image getImage(byte[] input, String imageId)
-    {
-        try
-        {
-            var stream = ImageIO.createImageInputStream(new ByteArrayInputStream(input));
-            var readers = ImageIO.getImageReaders(stream);
-            if (readers.hasNext())
-            {
-                var reader = readers.next();
-                reader.setInput(stream, true, true);
-
-                var param = reader.getDefaultReadParam();
-                var bufferedImage = reader.read(0, param);
-
-                var pngOutput = new ByteArrayOutputStream();
-                var webpOutput = new ByteArrayOutputStream();
-                ImageIO.write(bufferedImage, "png", pngOutput);
-                ImageIO.write(bufferedImage, "webp", webpOutput);
-
-                var image = new Image();
-                image.setId(imageId);
-                image.setUploadTime(Instant.now());
-
-                var pngBytes = pngOutput.toByteArray();
-                var webpBytes = webpOutput.toByteArray();
-                image.setBinaries(Map.of("bin", input.clone(), "png", pngBytes, "webp", webpBytes));
-
-                return image;
-            }
-            throw new IOException("Unsupported image type");
-        }
-        catch (IOException e)
-        {
-            throw new BadRequestException(e);
-        }
-    }
 }

@@ -161,15 +161,22 @@ public class Revision
         if (!this.image.isEmpty())
         {
             htmlBuilder.append("</p><p>");
+            var imageNodeStyle = "width: 100%;";
             var urlPrefix = URI.create(ChahoutanConfig.BACKEND_URL_PREFIX);
             for (var image : this.image)
             {
                 var file = image.getId() + ".png";
                 var src = urlPrefix.resolve("v1/images/" + file).toASCIIString();
-                htmlBuilder.append("<img src=\"");
+                htmlBuilder.append("<img style=\"").append(imageNodeStyle).append("\" src=\"");
                 escape(src, 0, src.length(), htmlBuilder);
                 htmlBuilder.append("\" alt=\"");
                 escape(file, 0, file.length(), htmlBuilder);
+                var width = image.getWidth();
+                var height = image.getHeight();
+                if (width * height > 0)
+                {
+                    htmlBuilder.append("\" width=\"").append(width).append("\" height=\"").append(height);
+                }
                 htmlBuilder.append("\">");
             }
         }

@@ -49,6 +49,13 @@ create table chahoutan_image_binaries
     primary key (image_id, suffix)
 );
 
+create table chahoutan_image_sizes
+(
+    image_id varchar(64) not null primary key,
+    height integer not null,
+    width integer not null
+);
+
 create table chahoutan_images
 (
     id varchar(64) not null primary key,

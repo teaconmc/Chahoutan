@@ -1,6 +1,11 @@
 package org.teacon.chahoutan.entity;
 
+import javax.imageio.ImageIO;
 import javax.persistence.*;
+import javax.ws.rs.BadRequestException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,11 +15,18 @@ import java.util.Map;
 @Entity
 @Access(AccessType.FIELD)
 @Table(name = "chahoutan_images")
+@SecondaryTable(name = "chahoutan_image_sizes", pkJoinColumns = @PrimaryKeyJoinColumn(name = "image_id", referencedColumnName = "id"))
 public class Image
 {
     @Id
     @Column(name = "id", nullable = false, length = 64)
     private String id;
+
+    @Column(name = "width", table = "chahoutan_image_sizes", nullable = false)
+    private Integer width = 0;
+
+    @Column(name = "height", table = "chahoutan_image_sizes", nullable = false)
+    private Integer height = 0;
 
     @Column(name = "upload_time", nullable = false)
     private Instant uploadTime = Instant.EPOCH;
@@ -30,9 +42,60 @@ public class Image
     @CollectionTable(name = "chahoutan_post_images", joinColumns = @JoinColumn(name = "image_id", referencedColumnName = "id"))
     private List<Revision> revision = new ArrayList<>();
 
+    public static Image from(byte[] input, String imageId)
+    {
+        try
+        {
+            var stream = ImageIO.createImageInputStream(new ByteArrayInputStream(input));
+            var readers = ImageIO.getImageReaders(stream);
+            if (readers.hasNext())
+            {
+                var reader = readers.next();
+                reader.setInput(stream, true, true);
+
+                var param = reader.getDefaultReadParam();
+                var bufferedImage = reader.read(0, param);
+
+                var pngOutput = new ByteArrayOutputStream();
+                var webpOutput = new ByteArrayOutputStream();
+                ImageIO.write(bufferedImage, "png", pngOutput);
+                ImageIO.write(bufferedImage, "webp", webpOutput);
+
+                var image = new Image();
+                image.setId(imageId);
+                image.setWidth(bufferedImage.getWidth());
+                image.setHeight(bufferedImage.getHeight());
+
+                var uploadTime = Instant.now();
+                image.setUploadTime(uploadTime);
+
+                var pngBytes = pngOutput.toByteArray();
+                var webpBytes = webpOutput.toByteArray();
+                image.setBinaries(Map.of("bin", input.clone(), "png", pngBytes, "webp", webpBytes));
+
+                return image;
+            }
+            throw new IOException("Unsupported image type");
+        }
+        catch (IOException e)
+        {
+            throw new BadRequestException(e);
+        }
+    }
+
     public String getId()
     {
         return this.id;
+    }
+
+    public Integer getWidth()
+    {
+        return this.width == null ? 0 : this.width;
+    }
+
+    public Integer getHeight()
+    {
+        return this.height == null ? 0 : this.height;
     }
 
     public Map<String, byte[]> getBinaries()
@@ -48,6 +111,16 @@ public class Image
     public void setId(String id)
     {
         this.id = id;
+    }
+
+    public void setWidth(Integer width)
+    {
+        this.width = width;
+    }
+
+    public void setHeight(Integer height)
+    {
+        this.height = height;
     }
 
     public void setUploadTime(Instant uploadTime)
