@@ -1,5 +1,7 @@
 package org.teacon.chahoutan.endpoint.v1;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.search.mapper.orm.Search;
 import org.springframework.stereotype.Component;
 import org.teacon.chahoutan.ChahoutanConfig;
@@ -27,6 +29,8 @@ import java.util.concurrent.atomic.AtomicReference;
 @Produces(MediaType.APPLICATION_JSON)
 public class RefreshEndpoint
 {
+    private static final Logger LOGGER = LogManager.getLogger(RefreshEndpoint.class);
+
     private static final AtomicReference<OffsetDateTime> startTimeRef = new AtomicReference<>();
 
     private final EntityManager manager;
@@ -58,6 +62,7 @@ public class RefreshEndpoint
         var zoneOffset = ChahoutanConfig.POST_ZONE_OFFSET;
         if (startTimeRef.compareAndSet(null, Instant.now().truncatedTo(ChronoUnit.SECONDS).atOffset(zoneOffset)))
         {
+            LOGGER.info("Start refreshing ...");
             var session = Search.session(this.manager);
             var imageFuture = CompletableFuture.runAsync(() ->
             {
@@ -68,7 +73,18 @@ public class RefreshEndpoint
                 }
             });
             var sessionFuture = session.massIndexer(Post.class).start().toCompletableFuture();
-            CompletableFuture.allOf(imageFuture, sessionFuture).thenRun(() -> startTimeRef.set(null));
+            CompletableFuture.allOf(imageFuture, sessionFuture).whenComplete((v, e) ->
+            {
+                if (e != null)
+                {
+                    LOGGER.warn("An exception was thrown when refreshing ...", e);
+                }
+                else
+                {
+                    LOGGER.info("Complete refreshing ...");
+                }
+                startTimeRef.set(null);
+            });
         }
         return this.get();
     }
