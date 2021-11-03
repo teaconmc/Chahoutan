@@ -21,7 +21,6 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Component
@@ -63,17 +62,14 @@ public class RefreshEndpoint
         if (startTimeRef.compareAndSet(null, Instant.now().truncatedTo(ChronoUnit.SECONDS).atOffset(zoneOffset)))
         {
             LOGGER.info("Start refreshing ...");
-            var session = Search.session(this.manager);
-            var imageFuture = CompletableFuture.runAsync(() ->
+            Search.session(this.manager).massIndexer(Post.class).start().thenRunAsync(() ->
             {
                 for (var image : this.imageRepo.findAll())
                 {
                     var binary = image.getBinaries().getOrDefault("bin", new byte[0]);
                     this.imageRepo.save(Image.from(binary, image.getId()));
                 }
-            });
-            var sessionFuture = session.massIndexer(Post.class).start().toCompletableFuture();
-            CompletableFuture.allOf(imageFuture, sessionFuture).whenComplete((v, e) ->
+            }).whenComplete((v, e) ->
             {
                 if (e != null)
                 {
