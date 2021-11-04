@@ -75,12 +75,9 @@ public class ImageEndpoint
     public ImageResponse add(@RequestBody byte[] input)
     {
         var id = getHash(input);
-        if (!this.imageRepo.existsById(id))
-        {
-            var image = this.imageRepo.save(Image.from(input, id, List.of()));
-            return ImageResponse.from(image);
-        }
-        throw new ClientErrorException(Response.Status.CONFLICT);
+        var revisionsOptional = this.imageRepo.findById(id).map(Image::getRevisions);
+        var image = this.imageRepo.save(Image.from(input, id, revisionsOptional.orElse(List.of())));
+        return ImageResponse.from(image);
     }
 
     @DELETE
