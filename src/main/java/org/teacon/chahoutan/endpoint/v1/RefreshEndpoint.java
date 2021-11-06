@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Component
@@ -67,7 +68,7 @@ public class RefreshEndpoint
                 for (var image : this.imageRepo.findAll())
                 {
                     var binary = image.getBinaries().getOrDefault("bin", new byte[0]);
-                    this.imageRepo.save(Image.from(binary, image.getId(), image.getRevisions()));
+                    this.imageRepo.save(Image.from(binary, image.getId(), id -> Optional.of(image)));
                 }
             }).whenComplete((v, e) ->
             {

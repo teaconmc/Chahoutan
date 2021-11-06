@@ -17,7 +17,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -74,10 +73,8 @@ public class ImageEndpoint
     @RequireAuth
     public ImageResponse add(@RequestBody byte[] input)
     {
-        var id = getHash(input);
-        var revisionsOptional = this.imageRepo.findById(id).map(Image::getRevisions);
-        var image = this.imageRepo.save(Image.from(input, id, revisionsOptional.orElse(List.of())));
-        return ImageResponse.from(image);
+        var image = Image.from(input, getHash(input), this.imageRepo::findById);
+        return ImageResponse.from(this.imageRepo.save(image));
     }
 
     @DELETE

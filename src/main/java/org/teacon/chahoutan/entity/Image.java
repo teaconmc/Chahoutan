@@ -7,10 +7,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 
 @Entity
 @Access(AccessType.FIELD)
@@ -42,7 +40,7 @@ public class Image
     @CollectionTable(name = "chahoutan_post_images", joinColumns = @JoinColumn(name = "image_id", referencedColumnName = "id"))
     private List<Revision> revision = new ArrayList<>();
 
-    public static Image from(byte[] input, String imageId, List<Revision> revisions)
+    public static Image from(byte[] input, String imageId, Function<String, Optional<Image>> oldFinder)
     {
         try
         {
@@ -56,24 +54,21 @@ public class Image
                 var param = reader.getDefaultReadParam();
                 var bufferedImage = reader.read(0, param);
 
-                var pngOutput = new ByteArrayOutputStream();
-                var webpOutput = new ByteArrayOutputStream();
-                ImageIO.write(bufferedImage, "png", pngOutput);
-                ImageIO.write(bufferedImage, "webp", webpOutput);
+                var png = new ByteArrayOutputStream();
+                var webp = new ByteArrayOutputStream();
+                ImageIO.write(bufferedImage, "png", png);
+                ImageIO.write(bufferedImage, "webp", webp);
 
-                var image = new Image();
-                image.setId(imageId);
+                var image = oldFinder.apply(imageId).orElseGet(() ->
+                {
+                    var newImage = new Image();
+                    newImage.setId(imageId);
+                    return newImage;
+                });
+                image.setUploadTime(Instant.now());
                 image.setWidth(bufferedImage.getWidth());
                 image.setHeight(bufferedImage.getHeight());
-
-                var uploadTime = Instant.now();
-                image.setUploadTime(uploadTime);
-
-                var pngBytes = pngOutput.toByteArray();
-                var webpBytes = webpOutput.toByteArray();
-                image.setBinaries(Map.of("bin", input.clone(), "png", pngBytes, "webp", webpBytes));
-
-                image.setRevisions(revisions);
+                image.setBinaries(Map.of("bin", input.clone(), "png", png.toByteArray(), "webp", webp.toByteArray()));
 
                 return image;
             }
@@ -132,11 +127,6 @@ public class Image
 
     public void setBinaries(Map<String, byte[]> binary)
     {
-        this.binaries = Map.copyOf(binary);
-    }
-
-    public void setRevisions(List<Revision> revisions)
-    {
-        this.revision = List.copyOf(revisions);
+        this.binaries = new HashMap<>(binary);
     }
 }
