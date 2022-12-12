@@ -41,13 +41,15 @@ public class Revision
 
     @ManyToMany
     @OrderColumn(name = "image_ordinal")
-    @CollectionTable(name = "chahoutan_post_images", joinColumns = @JoinColumn(name = "revision_id", referencedColumnName = "id"))
-    private List<Image> image = new ArrayList<>();
+    @JoinTable(name = "chahoutan_post_images",
+            joinColumns = @JoinColumn(name = "revision_id"),
+            inverseJoinColumns = @JoinColumn(name = "image_id"))
+    private List<Image> images = new ArrayList<>();
 
     @ElementCollection
     @MapKeyColumn(name = "anchor", columnDefinition = "text")
     @Column(name = "link", columnDefinition = "text", nullable = false)
-    @CollectionTable(name = "chahoutan_post_anchors", joinColumns = @JoinColumn(name = "revision_id", referencedColumnName = "id"))
+    @CollectionTable(name = "chahoutan_post_anchors", joinColumns = @JoinColumn(name = "revision_id"))
     private Map<String, String> anchors = new HashMap<>();
 
     private static void escape(String rawInput, int start, int end, StringBuilder htmlBuilder)
@@ -100,7 +102,7 @@ public class Revision
 
     public List<Image> getImages()
     {
-        return List.copyOf(this.image);
+        return List.copyOf(this.images);
     }
 
     public String getRssPlainText()
@@ -158,12 +160,12 @@ public class Revision
                 htmlBuilder.append("</a>");
             }
         }
-        if (!this.image.isEmpty())
+        if (!this.images.isEmpty())
         {
             htmlBuilder.append("</p><p>");
             var imageNodeStyle = "width: 100%;";
             var urlPrefix = URI.create(ChahoutanConfig.BACKEND_URL_PREFIX);
-            for (var image : this.image)
+            for (var image : this.images)
             {
                 var file = image.getId() + ".png";
                 var src = urlPrefix.resolve("v1/images/" + file).toASCIIString();
@@ -217,9 +219,9 @@ public class Revision
         this.anchors = Map.copyOf(entries);
     }
 
-    public void setImages(List<Image> image)
+    public void setImages(List<Image> images)
     {
-        this.image = List.copyOf(image);
+        this.images = List.copyOf(images);
     }
 
     public static class TextBridge implements ValueBridge<Revision, String>

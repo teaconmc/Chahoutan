@@ -13,7 +13,7 @@ import java.util.function.Function;
 @Entity
 @Access(AccessType.FIELD)
 @Table(name = "chahoutan_images")
-@SecondaryTable(name = "chahoutan_image_sizes", pkJoinColumns = @PrimaryKeyJoinColumn(name = "image_id", referencedColumnName = "id"))
+@SecondaryTable(name = "chahoutan_image_sizes", pkJoinColumns = @PrimaryKeyJoinColumn(name = "image_id"))
 public class Image
 {
     @Id
@@ -32,13 +32,15 @@ public class Image
     @ElementCollection
     @MapKeyColumn(name = "suffix", length = 16)
     @Column(name = "binary", columnDefinition = "blob", nullable = false)
-    @CollectionTable(name = "chahoutan_image_binaries", joinColumns = @JoinColumn(name = "image_id", referencedColumnName = "id"))
+    @CollectionTable(name = "chahoutan_image_binaries", joinColumns = @JoinColumn(name = "image_id"))
     private Map<String, byte[]> binaries = new HashMap<>();
 
     @ManyToMany
     @OrderBy("creationTime DESC")
-    @CollectionTable(name = "chahoutan_post_images", joinColumns = @JoinColumn(name = "image_id", referencedColumnName = "id"))
-    private List<Revision> revision = new ArrayList<>();
+    @JoinTable(name = "chahoutan_post_images",
+            joinColumns = @JoinColumn(name = "image_id", updatable = false, insertable = false),
+            inverseJoinColumns = @JoinColumn(name = "revision_id", updatable = false, insertable = false))
+    private List<Revision> revisions = new ArrayList<>();
 
     public static Image from(byte[] input, String imageId, Function<String, Optional<Image>> oldFinder)
     {
@@ -102,7 +104,7 @@ public class Image
 
     public List<Revision> getRevisions()
     {
-        return List.copyOf(this.revision);
+        return List.copyOf(this.revisions);
     }
 
     public void setId(String id)
