@@ -73,8 +73,7 @@ public class ImageEndpoint
     @RequireAuth
     public ImageResponse add(@RequestBody byte[] input)
     {
-        var image = Image.from(input, getHash(input), this.imageRepo::findById);
-        return ImageResponse.from(this.imageRepo.save(image));
+        return ImageResponse.from(this.imageRepo.save(Image.from(input, getHash(input))));
     }
 
     @DELETE

@@ -7,8 +7,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.*;
-import java.util.function.Function;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Entity
 @Access(AccessType.FIELD)
@@ -42,7 +44,7 @@ public class Image
             inverseJoinColumns = @JoinColumn(name = "revision_id", updatable = false, insertable = false))
     private List<Revision> revisions = new ArrayList<>();
 
-    public static Image from(byte[] input, String imageId, Function<String, Optional<Image>> oldFinder)
+    public static Image from(byte[] input, String imageId)
     {
         try
         {
@@ -61,12 +63,8 @@ public class Image
                 ImageIO.write(bufferedImage, "png", png);
                 ImageIO.write(bufferedImage, "webp", webp);
 
-                var image = oldFinder.apply(imageId).orElseGet(() ->
-                {
-                    var newImage = new Image();
-                    newImage.setId(imageId);
-                    return newImage;
-                });
+                var image = new Image();
+                image.setId(imageId);
                 image.setUploadTime(Instant.now());
                 image.setWidth(bufferedImage.getWidth());
                 image.setHeight(bufferedImage.getHeight());
