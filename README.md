@@ -114,6 +114,17 @@ CREATE TABLE chahoutan_revisions
     CONSTRAINT chahoutan_revisions_pkey PRIMARY KEY (id),
     CONSTRAINT fk8ll74gix3lf472w3wdoleb37d FOREIGN KEY (post_id) REFERENCES chahoutan_posts (id)
 );
+
+CREATE TABLE chahoutan_search_indexes
+(
+    id uuid NOT NULL,
+    search_index_vector tsvector NOT NULL,
+    post_id int4 NOT NULL,
+    CONSTRAINT chahoutan_search_indexes_pkey PRIMARY KEY (id),
+    CONSTRAINT fkmy9vvhqg1ybcv79wyl8jv3ec7 FOREIGN KEY (post_id) REFERENCES chahoutan_posts (id)
+);
+
+CREATE INDEX chahoutan_search_index_vector_idx ON chahoutan_search_indexes USING gin (search_index_vector);
 ```
 
 ## HTTP API 格式

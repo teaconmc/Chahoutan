@@ -1,7 +1,6 @@
 package org.teacon.chahoutan.repo;
 
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.teacon.chahoutan.entity.Post;
 

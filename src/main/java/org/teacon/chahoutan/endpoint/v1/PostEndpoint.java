@@ -111,7 +111,6 @@ public class PostEndpoint
     public PostResponse add(@RequestBody PostRequest body)
     {
         var post = this.postRepo.save(body.toPost(this.imageRepo));
-        this.searchIndexRepo.createSearchIndex();
         this.searchIndexRepo.deleteAllByPostId(post.getId());
         this.searchIndexRepo.refreshAllByPostId(ChahoutanConfig.PG_FTS_CONFIG, post.getId());
         return PostResponse.from(post);
@@ -126,7 +125,6 @@ public class PostEndpoint
         var post = this.postRepo.findById(id).orElseThrow(NotFoundException::new);
         post.setRevision(null); // detach revisions
         this.postRepo.save(post);
-        this.searchIndexRepo.createSearchIndex();
         this.searchIndexRepo.deleteAllByPostId(post.getId());
         this.searchIndexRepo.refreshAllByPostId(ChahoutanConfig.PG_FTS_CONFIG, post.getId());
         return Map.of();
