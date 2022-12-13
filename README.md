@@ -27,69 +27,92 @@ java -jar build/libs/Chahoutan-<version>.jar
 工作目录文件：
 
 * `chahoutan-indexes` 目录为茶后谈文本索引。
-* `chahoutan.sqlite3.db` 文件为茶后谈 SQLite 数据库。
 * `chahoutan-spring.log` 文件为 Spring Boot 运行日志。
 * `chahoutan-tokens.txt` 文件为私有 API 鉴权 token 列表。
 
 ## 数据库格式
 
+数据库使用 PostgreSQL 10+ 版本。
+
 ```sql
-create table chahoutan_editors
+CREATE TABLE chahoutan_images
 (
-    post_id integer not null,
-    editor text not null,
-    primary key (post_id, editor)
+    id bpchar(64) NOT NULL,
+    upload_time timestamptz NOT NULL,
+    CONSTRAINT chahoutan_images_pkey PRIMARY KEY (id)
 );
 
-create table chahoutan_image_binaries
+CREATE TABLE chahoutan_image_binaries
 (
-    image_id varchar(64) not null,
-    binary blob not null,
-    suffix varchar(16) not null,
-    primary key (image_id, suffix)
+    image_id bpchar(64) NOT NULL,
+    image_binary bytea NOT NULL,
+    suffix varchar(16) NOT NULL,
+    CONSTRAINT chahoutan_image_binaries_pkey PRIMARY KEY (image_id, suffix),
+    CONSTRAINT fk1jyvtay33k1u0n0q20dt45euv FOREIGN KEY (image_id) REFERENCES chahoutan_images (id)
 );
 
-create table chahoutan_image_sizes
+CREATE TABLE chahoutan_image_sizes
 (
-    image_id varchar(64) not null primary key,
-    height integer not null,
-    width integer not null
+    height int2 NOT NULL,
+    width int2 NOT NULL,
+    image_id bpchar(64) NOT NULL,
+    CONSTRAINT chahoutan_image_sizes_pkey PRIMARY KEY (image_id),
+    CONSTRAINT fkpro1cul2fyb1xs1yt1sut2ti6 FOREIGN KEY (image_id) REFERENCES chahoutan_images (id)
 );
 
-create table chahoutan_images
+CREATE TABLE chahoutan_corrections
 (
-    id varchar(64) not null primary key,
-    upload_time datetime not null
+    id uuid NOT NULL,
+    text_content text NOT NULL,
+    upload_date date NOT NULL,
+    revision_id uuid NOT NULL,
+    CONSTRAINT chahoutan_corrections_pkey PRIMARY KEY (id),
+    CONSTRAINT fkgrxyryioaeetwf82c2jr4ih1p FOREIGN KEY (revision_id) REFERENCES chahoutan_revisions (id)
 );
 
-create table chahoutan_post_anchors
+CREATE TABLE chahoutan_editors
 (
-    revision_id blob not null,
-    link text not null,
-    anchor text not null,
-    primary key (revision_id, anchor)
+    post_id int4 NOT NULL,
+    editor varchar(32) NOT NULL,
+    CONSTRAINT chahoutan_editors_pkey PRIMARY KEY (post_id, editor),
+    CONSTRAINT fkriftc1x04r4jj2uvbg7g3bfuo FOREIGN KEY (post_id) REFERENCES chahoutan_posts (id)
 );
 
-create table chahoutan_post_images
+CREATE TABLE chahoutan_post_anchors
 (
-    revision_id blob not null,
-    image_id varchar(64) not null,
-    image_ordinal integer not null,
-    primary key (revision_id, image_ordinal)
+    revision_id uuid NOT NULL,
+    link text NOT NULL,
+    anchor text NOT NULL,
+    CONSTRAINT chahoutan_post_anchors_pkey PRIMARY KEY (revision_id, anchor),
+    CONSTRAINT fk66omt1yfcmam8rn9s3f5qh6pq FOREIGN KEY (revision_id) REFERENCES chahoutan_revisions (id)
 );
 
-create table chahoutan_posts
+CREATE TABLE chahoutan_post_images
 (
-    id integer not null primary key,
-    revision_id blob -- nullable
+    revision_id uuid NOT NULL,
+    image_id bpchar(64) NOT NULL,
+    image_ordinal int4 NOT NULL,
+    CONSTRAINT chahoutan_post_images_pkey PRIMARY KEY (revision_id, image_ordinal),
+    CONSTRAINT fk4trlnovjnjoo7hyq0nsnl2ruv FOREIGN KEY (image_id) REFERENCES chahoutan_images (id),
+    CONSTRAINT fklitxm6ei05ki14subnnr03nji FOREIGN KEY (revision_id) REFERENCES chahoutan_revisions (id)
 );
 
-create table chahoutan_revisions
+CREATE TABLE chahoutan_posts
 (
-    id blob not null primary key,
-    creation_time datetime not null,
-    text text not null,
-    post integer not null
+    id int4 NOT NULL,
+    revision_id uuid NULL,
+    CONSTRAINT chahoutan_posts_pkey PRIMARY KEY (id),
+    CONSTRAINT fk6aj0lwnht6m0eag2iojpdsato FOREIGN KEY (revision_id) REFERENCES chahoutan_revisions (id)
+);
+
+CREATE TABLE chahoutan_revisions
+(
+    id uuid NOT NULL,
+    creation_time timestamptz NOT NULL,
+    text_content text NOT NULL,
+    post_id int4 NOT NULL,
+    CONSTRAINT chahoutan_revisions_pkey PRIMARY KEY (id),
+    CONSTRAINT fk8ll74gix3lf472w3wdoleb37d FOREIGN KEY (post_id) REFERENCES chahoutan_posts (id)
 );
 ```
 

@@ -1,5 +1,7 @@
 package org.teacon.chahoutan.entity;
 
+import org.teacon.chahoutan.ChahoutanConfig;
+
 import javax.imageio.ImageIO;
 import javax.persistence.*;
 import javax.ws.rs.BadRequestException;
@@ -7,6 +9,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,21 +22,21 @@ import java.util.Map;
 public class Image
 {
     @Id
-    @Column(name = "id", nullable = false, length = 64)
+    @Column(name = "id", columnDefinition = "char(64)", nullable = false)
     private String id;
 
-    @Column(name = "width", table = "chahoutan_image_sizes", nullable = false)
+    @Column(name = "width", table = "chahoutan_image_sizes", columnDefinition = "smallint", nullable = false)
     private Integer width = 0;
 
-    @Column(name = "height", table = "chahoutan_image_sizes", nullable = false)
+    @Column(name = "height", table = "chahoutan_image_sizes", columnDefinition = "smallint", nullable = false)
     private Integer height = 0;
 
-    @Column(name = "upload_time", nullable = false)
-    private Instant uploadTime = Instant.EPOCH;
+    @Column(name = "upload_time", columnDefinition = "timestamptz", nullable = false)
+    private ZonedDateTime uploadTime = Instant.EPOCH.atZone(ChahoutanConfig.POST_ZONE_ID);
 
     @ElementCollection
     @MapKeyColumn(name = "suffix", length = 16)
-    @Column(name = "binary", columnDefinition = "blob", nullable = false)
+    @Column(name = "image_binary", columnDefinition = "bytea", nullable = false)
     @CollectionTable(name = "chahoutan_image_binaries", joinColumns = @JoinColumn(name = "image_id"))
     private Map<String, byte[]> binaries = new HashMap<>();
 
@@ -122,7 +125,7 @@ public class Image
 
     public void setUploadTime(Instant uploadTime)
     {
-        this.uploadTime = uploadTime;
+        this.uploadTime = uploadTime.atZone(ChahoutanConfig.POST_ZONE_ID);
     }
 
     public void setBinaries(Map<String, byte[]> binary)

@@ -1,5 +1,7 @@
 package org.teacon.chahoutan.repo;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.teacon.chahoutan.entity.Post;
 
@@ -8,7 +10,7 @@ import java.util.Optional;
 
 public interface PostRepository extends CrudRepository<Post, Integer>
 {
-    List<Post> findFirst20PostsByIdLessThanEqualAndRevisionNotNullOrderByIdDesc(Integer id);
+    List<Post> findByIdLessThanEqualAndRevisionNotNullOrderByIdDesc(Integer id, Pageable pageable);
 
     Optional<Post> findByIdAndRevisionNotNull(Integer id);
 }

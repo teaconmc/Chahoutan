@@ -1,13 +1,12 @@
 package org.teacon.chahoutan.entity;
 
-import org.hibernate.search.mapper.pojo.bridge.ValueBridge;
-import org.hibernate.search.mapper.pojo.bridge.runtime.ValueBridgeToIndexedValueContext;
 import org.teacon.chahoutan.ChahoutanConfig;
 
 import javax.persistence.*;
 import java.net.URI;
 import java.text.MessageFormat;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 @Entity
@@ -26,25 +25,27 @@ public class Revision
 
     @Id
     @GeneratedValue(generator = "UUID")
-    @Column(name = "id", nullable = false)
+    @Column(name = "id", columnDefinition = "uuid", nullable = false)
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "post", nullable = false)
+    @JoinColumn(name = "post_id", nullable = false)
     private Post post = new Post();
 
-    @Column(name = "creation_time", nullable = false)
-    private Instant creationTime = Instant.EPOCH;
+    @Column(name = "creation_time", columnDefinition = "timestamptz", nullable = false)
+    private ZonedDateTime creationTime = Instant.EPOCH.atZone(ChahoutanConfig.POST_ZONE_ID);
 
-    @Column(name = "text", columnDefinition = "text", nullable = false)
+    @Column(name = "text_content", columnDefinition = "text", nullable = false)
     private String text = "";
 
     @ManyToMany
-    @OrderColumn(name = "image_ordinal")
-    @JoinTable(name = "chahoutan_post_images",
-            joinColumns = @JoinColumn(name = "revision_id"),
-            inverseJoinColumns = @JoinColumn(name = "image_id"))
+    @OrderColumn(name = "image_ordinal", columnDefinition = "int")
+    @JoinTable(name = "chahoutan_post_images", joinColumns = @JoinColumn(name = "revision_id"), inverseJoinColumns = @JoinColumn(name = "image_id"))
     private List<Image> images = new ArrayList<>();
+
+    @OneToMany(mappedBy = "revision")
+    @OrderBy("uploadDate ASC")
+    private List<Correction> corrections = new ArrayList<>();
 
     @ElementCollection
     @MapKeyColumn(name = "anchor", columnDefinition = "text")
@@ -197,7 +198,7 @@ public class Revision
 
     public void setCreationTime(Instant time)
     {
-        this.creationTime = time;
+        this.creationTime = time.atZone(ChahoutanConfig.POST_ZONE_ID);
     }
 
     public void setAnchors(List<String> anchors)
@@ -222,23 +223,5 @@ public class Revision
     public void setImages(List<Image> images)
     {
         this.images = List.copyOf(images);
-    }
-
-    public static class TextBridge implements ValueBridge<Revision, String>
-    {
-        @Override
-        public String toIndexedValue(Revision value, ValueBridgeToIndexedValueContext context)
-        {
-            return value == null ? null : value.getText();
-        }
-    }
-
-    public static class TitleBridge implements ValueBridge<Revision, String>
-    {
-        @Override
-        public String toIndexedValue(Revision value, ValueBridgeToIndexedValueContext context)
-        {
-            return value == null ? null : value.getTitle();
-        }
     }
 }

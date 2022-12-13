@@ -3,6 +3,7 @@ package org.teacon.chahoutan.endpoint;
 import com.rometools.rome.feed.synd.*;
 import com.rometools.rome.io.FeedException;
 import com.rometools.rome.io.SyndFeedOutput;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.teacon.chahoutan.ChahoutanConfig;
 import org.teacon.chahoutan.entity.Post;
@@ -84,7 +85,8 @@ public class FeedEndpoint
 
         var items = new ArrayList<SyndEntry>(20);
         var lastId = Post.getLastPublicPostId(until);
-        for (var post : this.postRepo.findFirst20PostsByIdLessThanEqualAndRevisionNotNullOrderByIdDesc(lastId))
+        var queryDefaultPage = ChahoutanConfig.POST_QUERY_DEFAULT_PAGE;
+        for (var post : this.postRepo.findByIdLessThanEqualAndRevisionNotNullOrderByIdDesc(lastId, queryDefaultPage))
         {
             var entry = new SyndEntryImpl();
             var publishTIme = post.getPublishTime();

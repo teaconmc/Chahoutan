@@ -1,9 +1,8 @@
 package org.teacon.chahoutan.endpoint.v1;
 
-import org.hibernate.search.engine.search.common.ValueConvert;
-import org.hibernate.search.mapper.orm.Search;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.teacon.chahoutan.ChahoutanConfig;
 import org.teacon.chahoutan.auth.RequireAuth;
 import org.teacon.chahoutan.entity.Post;
 import org.teacon.chahoutan.entity.Revision;
@@ -14,8 +13,8 @@ import org.teacon.chahoutan.network.PostResponse;
 import org.teacon.chahoutan.repo.ImageRepository;
 import org.teacon.chahoutan.repo.PostRepository;
 import org.teacon.chahoutan.repo.RevisionRepository;
+import org.teacon.chahoutan.repo.SearchIndexRepository;
 
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -29,20 +28,20 @@ import java.util.UUID;
 @Produces(MediaType.APPLICATION_JSON)
 public class PostEndpoint
 {
-    private final EntityManager manager;
     private final ImageRepository imageRepo;
     private final PostRepository postRepo;
     private final RevisionRepository revisionRepo;
+    private final SearchIndexRepository searchIndexRepo;
 
-    public PostEndpoint(EntityManager manager,
-                        ImageRepository imageRepo,
+    public PostEndpoint(ImageRepository imageRepo,
                         PostRepository postRepo,
-                        RevisionRepository revisionRepo)
+                        RevisionRepository revisionRepo,
+                        SearchIndexRepository searchIndexRepo)
     {
-        this.manager = manager;
         this.imageRepo = imageRepo;
         this.postRepo = postRepo;
         this.revisionRepo = revisionRepo;
+        this.searchIndexRepo = searchIndexRepo;
     }
 
     @GET
@@ -50,23 +49,16 @@ public class PostEndpoint
     public Iterator<PostResponse> iterator(@QueryParam("q") String query, @QueryParam("until") Integer until)
     {
         var lastId = Post.getLastPublicPostId(until);
+        var queryDefaultPage = ChahoutanConfig.POST_QUERY_DEFAULT_PAGE;
         if (query == null || query.isEmpty())
         {
-            return this.postRepo.findFirst20PostsByIdLessThanEqualAndRevisionNotNullOrderByIdDesc(lastId).stream()
-                    .map(PostResponse::from).iterator();
+            return this.postRepo.findByIdLessThanEqualAndRevisionNotNullOrderByIdDesc(
+                    lastId, queryDefaultPage).stream().map(PostResponse::from).iterator();
         }
         else
         {
-            var session = Search.session(this.manager);
-            return session.search(Post.class)
-                    .where(f -> f.bool()
-                            .minimumShouldMatchNumber(1)
-                            .must(f2 -> f2.range().field("id").atMost(lastId))
-                            .should(f2 -> f2.match().field("text").matching(query, ValueConvert.NO))
-                            .should(f2 -> f2.match().field("editor").matching(query, ValueConvert.NO).boost(10.0f))
-                            .should(f2 -> f2.match().field("title").matching(query, ValueConvert.NO).boost(100.0f)))
-                    .fetch(20).hits().stream()
-                    .map(PostResponse::from).iterator();
+            return this.searchIndexRepo.selectByQuery(query, lastId, queryDefaultPage).stream().flatMap(
+                    id -> this.postRepo.findByIdAndRevisionNotNull(id).stream()).map(PostResponse::from).iterator();
         }
     }
 
@@ -115,20 +107,28 @@ public class PostEndpoint
 
     @POST
     @RequireAuth
+    @Transactional
     public PostResponse add(@RequestBody PostRequest body)
     {
-        var post = body.toPost(this.imageRepo);
-        return PostResponse.from(this.postRepo.save(post));
+        var post = this.postRepo.save(body.toPost(this.imageRepo));
+        this.searchIndexRepo.createSearchIndex();
+        this.searchIndexRepo.deleteAllByPostId(post.getId());
+        this.searchIndexRepo.refreshAllByPostId(ChahoutanConfig.PG_FTS_CONFIG, post.getId());
+        return PostResponse.from(post);
     }
 
     @DELETE
     @RequireAuth
+    @Transactional
     @Path("/{id:[1-9][0-9]*}")
     public Map<String, Void> remove(@PathParam("id") Integer id)
     {
         var post = this.postRepo.findById(id).orElseThrow(NotFoundException::new);
         post.setRevision(null); // detach revisions
         this.postRepo.save(post);
+        this.searchIndexRepo.createSearchIndex();
+        this.searchIndexRepo.deleteAllByPostId(post.getId());
+        this.searchIndexRepo.refreshAllByPostId(ChahoutanConfig.PG_FTS_CONFIG, post.getId());
         return Map.of();
     }
 

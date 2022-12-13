@@ -1,7 +1,5 @@
 package org.teacon.chahoutan.entity;
 
-import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBridgeRef;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 import org.teacon.chahoutan.ChahoutanConfig;
 
 import javax.persistence.*;
@@ -14,28 +12,22 @@ import java.util.Set;
 @Entity
 @Access(AccessType.FIELD)
 @Table(name = "chahoutan_posts")
-@Indexed(index = "chahoutan-indexes")
 public class Post
 {
     private static final long POST_EPOCH_MILLIS = ChahoutanConfig.POST_EPOCH.toEpochMilli();
     private static final long POST_INTERVAL_MILLIS = ChahoutanConfig.POST_INTERVAL.toMillis();
 
     @Id
-    @DocumentId
-    @GenericField(name = "id")
-    @Column(name = "id", nullable = false)
+    @Column(name = "id", columnDefinition = "int", nullable = false)
     private Integer id;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "revision_id")
-    @FullTextField(name = "text", analyzer = "smartcn", valueBridge = @ValueBridgeRef(type = Revision.TextBridge.class))
-    @FullTextField(name = "title", analyzer = "standard", valueBridge = @ValueBridgeRef(type = Revision.TitleBridge.class))
     private Revision revision = null;
 
     @ElementCollection
-    @KeywordField(name = "editor")
-    @Column(columnDefinition = "text", nullable = false)
-    @CollectionTable(name = "chahoutan_editors")
+    @Column(name = "editor", columnDefinition = "varchar(32)", nullable = false)
+    @CollectionTable(name = "chahoutan_editors", joinColumns = @JoinColumn(name = "post_id"))
     private Set<String> editor = new HashSet<>();
 
     public static int getLastPublicPostId(Integer until)
@@ -63,7 +55,7 @@ public class Post
     public OffsetDateTime getPublishTime()
     {
         var millis = POST_EPOCH_MILLIS + this.getId() * POST_INTERVAL_MILLIS;
-        return Instant.ofEpochMilli(millis).atOffset(ChahoutanConfig.POST_ZONE_OFFSET);
+        return Instant.ofEpochMilli(millis).atZone(ChahoutanConfig.POST_ZONE_ID).toOffsetDateTime();
     }
 
     public void setId(Integer id)

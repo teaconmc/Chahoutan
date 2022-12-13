@@ -17,21 +17,17 @@ bootRun {
 }
 
 dependencies {
-	annotationProcessor 'org.springframework.boot:spring-boot-starter-data-jpa:2.5.5'
+	annotationProcessor 'org.springframework.boot:spring-boot-starter-data-jpa:2.7.6'
 
-	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.12.5'
-	implementation 'com.github.gwenn:sqlite-dialect:0.1.2'
-	implementation 'com.rometools:rome:1.16.0'
-	implementation 'org.apache.lucene:lucene-analyzers-common:8.10.1'
-	implementation 'org.apache.lucene:lucene-analyzers-smartcn:8.10.1'
-	implementation 'org.hibernate.search:hibernate-search-backend-lucene:6.0.7.Final'
-	implementation 'org.hibernate.search:hibernate-search-mapper-orm:6.0.7.Final'
-	implementation 'org.sejda.webp-imageio:webp-imageio-sejda:0.1.0'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.5.5'
-	implementation 'org.springframework.boot:spring-boot-starter-jersey:2.5.5'
-	implementation 'org.xerial:sqlite-jdbc:3.36.0.3'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.1'
+	implementation 'com.rometools:rome:1.18.0'
+	implementation 'org.sejda.imageio:webp-imageio:0.1.6'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.7.6'
+	implementation 'org.springframework.boot:spring-boot-starter-jersey:2.7.6'
+	implementation 'org.postgresql:postgresql:42.5.1'
+	implementation 'com.vladmihalcea:hibernate-types-52:2.20.0'
 
-	testImplementation 'org.springframework.boot:spring-boot-starter-test:2.5.5'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test:2.7.6'
 }
 
 test {

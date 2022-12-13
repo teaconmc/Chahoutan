@@ -2,6 +2,7 @@ package org.teacon.chahoutan;
 
 import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.teacon.chahoutan.auth.RequireAuthFilter;
 import org.teacon.chahoutan.endpoint.FeedEndpoint;
@@ -15,12 +16,15 @@ import org.teacon.chahoutan.provider.JacksonContextResolver;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.Base64;
 
 @Component
 public class ChahoutanConfig extends ResourceConfig
 {
+    public static final String PG_FTS_CONFIG = System.getProperty("chahoutan.postgres.fullTextSearchConfig", "english");
+    public static final String PG_DATASOURCE = System.getProperty("chahoutan.postgres.datasource", "jdbc:postgresql://localhost:5432/chahoutan?user=postgres");
+
     public static final String AUTHOR = "TeaCon";
     public static final String TITLE = "TeaCon 茶后谈";
     public static final String EMAIL = "contact@teacon.org";
@@ -42,10 +46,11 @@ public class ChahoutanConfig extends ResourceConfig
     public static final String EDITOR_SIGN_SEPARATOR = "，";
     public static final String EDITOR_SIGN_PREFIX = "【本期编辑：";
 
+    public static final ZoneId POST_ZONE_ID = ZoneId.of("UTC+8");
     public static final Duration POST_DELAY = Duration.ofHours(28);
     public static final Duration POST_INTERVAL = Duration.ofHours(56);
-    public static final ZoneOffset POST_ZONE_OFFSET = ZoneOffset.ofHours(+8);
     public static final Instant POST_EPOCH = Instant.parse("2021-01-29T19:40:00+08:00");
+    public static final Pageable POST_QUERY_DEFAULT_PAGE = Pageable.ofSize(20);
 
     public static final byte[] ICO_BINARY_WITH_GZIP_COMPRESSED = Base64.getDecoder().decode("H4sICHTyaWECA3RlYWNv" +
             "bi1mYXZpY29uLmljbwDtWn1oFEcUn8Roq9XaqkixepcIihYFP0JRErmokVosrWgDCkqsX/hJ/1EMVnP5Q0zwKyBIENuqbRW0rSKi" +
@@ -67,7 +72,6 @@ public class ChahoutanConfig extends ResourceConfig
             "8AbwuiC4hBz87AnONsbLHDYD0wreIo0xIB4XD4WjcR6+FzP+j9TGeXvUxHE9FDHkwpGY3+DBOJfRYADc6CgWlNnTUzeNa2s+QgAA");
 
     public static final int VERSION = 1;
-
     public ChahoutanConfig()
     {
         // endpoints

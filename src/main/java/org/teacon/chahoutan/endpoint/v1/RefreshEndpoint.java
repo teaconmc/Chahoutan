@@ -2,15 +2,13 @@ package org.teacon.chahoutan.endpoint.v1;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.search.mapper.orm.Search;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.teacon.chahoutan.ChahoutanConfig;
 import org.teacon.chahoutan.auth.RequireAuth;
-import org.teacon.chahoutan.entity.Image;
-import org.teacon.chahoutan.entity.Post;
-import org.teacon.chahoutan.repo.ImageRepository;
+import org.teacon.chahoutan.repo.SearchIndexRepository;
 
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -18,9 +16,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.time.Instant;
-import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Component
@@ -30,16 +29,16 @@ public class RefreshEndpoint
 {
     private static final Logger LOGGER = LogManager.getLogger(RefreshEndpoint.class);
 
-    private static final AtomicReference<OffsetDateTime> startTimeRef = new AtomicReference<>();
+    private static final AtomicReference<ZonedDateTime> startTimeRef = new AtomicReference<>();
 
-    private final EntityManager manager;
+    private final PlatformTransactionManager transactionManager;
+    private final SearchIndexRepository searchIndexRepo;
 
-    private final ImageRepository imageRepo;
-
-    public RefreshEndpoint(EntityManager manager, ImageRepository imageRepo)
+    public RefreshEndpoint(PlatformTransactionManager transactionManager,
+                           SearchIndexRepository searchIndexRepo)
     {
-        this.manager = manager;
-        this.imageRepo = imageRepo;
+        this.transactionManager = transactionManager;
+        this.searchIndexRepo = searchIndexRepo;
     }
 
     @GET
@@ -58,29 +57,22 @@ public class RefreshEndpoint
     @RequireAuth
     public Map<String, Object> refresh()
     {
-        var zoneOffset = ChahoutanConfig.POST_ZONE_OFFSET;
-        if (startTimeRef.compareAndSet(null, Instant.now().truncatedTo(ChronoUnit.SECONDS).atOffset(zoneOffset)))
+        var now = Instant.now().truncatedTo(ChronoUnit.SECONDS).atZone(ChahoutanConfig.POST_ZONE_ID);
+        if (startTimeRef.compareAndSet(null, now))
         {
-            LOGGER.info("Start refreshing ...");
-            Search.session(this.manager).massIndexer(Post.class).start().thenRunAsync(() ->
+            var template = new TransactionTemplate(this.transactionManager);
+            var future = CompletableFuture.runAsync(() -> template.executeWithoutResult(status ->
             {
-                for (var image : this.imageRepo.findAll())
+                LOGGER.info("Start refreshing ...");
+                this.searchIndexRepo.createSearchIndex();
+                for (var postId : this.searchIndexRepo.selectPostIds())
                 {
-                    var binary = image.getBinaries().getOrDefault("bin", new byte[0]);
-                    this.imageRepo.save(Image.from(binary, image.getId()));
+                    this.searchIndexRepo.deleteAllByPostId(postId);
+                    this.searchIndexRepo.refreshAllByPostId(ChahoutanConfig.PG_FTS_CONFIG, postId);
                 }
-            }).whenComplete((v, e) ->
-            {
-                if (e != null)
-                {
-                    LOGGER.warn("An exception was thrown when refreshing ...", e);
-                }
-                else
-                {
-                    LOGGER.info("Complete refreshing ...");
-                }
-                startTimeRef.set(null);
-            });
+                LOGGER.info("Complete refreshing ...");
+            }));
+            future.whenComplete((v, t) -> startTimeRef.set(null));
         }
         return this.get();
     }
