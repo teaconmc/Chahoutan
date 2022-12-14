@@ -29,12 +29,12 @@ public interface SearchIndexRepository extends CrudRepository<SearchIndex, UUID>
             AS pairs
             """;
     String SELECT_ALL_POST_IDS = """
-            SELECT p.id FROM Post p
+            SELECT p.id FROM chahoutan_posts p
             """;
     String SELECT_BY_QUERY = """
-            SELECT si.post.id FROM SearchIndex si WHERE si.post.id <= :until
-            AND ts_match_vq(si.searchIndexVector, plainto_tsquery(:query)) = TRUE GROUP BY si.post.id
-            ORDER BY max(ts_rank(si.searchIndexVector, plainto_tsquery(:query))) DESC, si.post.id DESC
+            SELECT si.post_id FROM chahoutan_search_indexes si WHERE si.post_id <= :until
+            AND ts_match_vq(si.search_index_vector, websearch_to_tsquery(cast(:config AS regconfig), :query)) GROUP BY si.post_id
+            ORDER BY max(ts_rank(si.search_index_vector, websearch_to_tsquery(cast(:config AS regconfig), :query))) DESC, si.post_id DESC
             """;
 
     @Modifying
@@ -47,9 +47,9 @@ public interface SearchIndexRepository extends CrudRepository<SearchIndex, UUID>
 
     void deleteAllByPostId(Integer id);
 
-    @Query(value = SELECT_ALL_POST_IDS)
+    @Query(value = SELECT_ALL_POST_IDS, nativeQuery = true)
     Iterable<Integer> selectPostIds();
 
-    @Query(value = SELECT_BY_QUERY)
-    List<Integer> selectByQuery(String query, int until, Pageable pageable);
+    @Query(value = SELECT_BY_QUERY, nativeQuery = true)
+    List<Integer> selectByQuery(String config, String query, int until, Pageable pageable);
 }

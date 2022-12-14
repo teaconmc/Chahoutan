@@ -49,15 +49,17 @@ public class PostEndpoint
     public Iterator<PostResponse> iterator(@QueryParam("q") String query, @QueryParam("until") Integer until)
     {
         var lastId = Post.getLastPublicPostId(until);
-        var queryDefaultPage = ChahoutanConfig.POST_QUERY_DEFAULT_PAGE;
         if (query == null || query.isEmpty())
         {
+            var queryDefaultPage = ChahoutanConfig.POST_QUERY_DEFAULT_PAGE;
             return this.postRepo.findByIdLessThanEqualAndRevisionNotNullOrderByIdDesc(
                     lastId, queryDefaultPage).stream().map(PostResponse::from).iterator();
         }
         else
         {
-            return this.searchIndexRepo.selectByQuery(query, lastId, queryDefaultPage).stream().flatMap(
+            var config = ChahoutanConfig.PG_FTS_CONFIG;
+            var queryDefaultPage = ChahoutanConfig.POST_QUERY_DEFAULT_PAGE;
+            return this.searchIndexRepo.selectByQuery(config, query, lastId, queryDefaultPage).stream().flatMap(
                     id -> this.postRepo.findByIdAndRevisionNotNull(id).stream()).map(PostResponse::from).iterator();
         }
     }
