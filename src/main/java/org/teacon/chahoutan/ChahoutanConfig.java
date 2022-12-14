@@ -18,12 +18,13 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Base64;
+import java.util.Objects;
 
 @Component
 public class ChahoutanConfig extends ResourceConfig
 {
-    public static final String PG_FTS_CONFIG = System.getProperty("chahoutan.postgres.fullTextSearchConfig", "english");
-    public static final String PG_DATASOURCE = System.getProperty("chahoutan.postgres.datasource", "jdbc:postgresql://localhost:5432/chahoutan?user=postgres");
+    public static final String PG_FTS_CONFIG = Objects.requireNonNullElse(System.getenv("CHAHOUTAN_PG_FTS_CONFIG"), "english");
+    public static final String PG_DATASOURCE = Objects.requireNonNullElse(System.getenv("CHAHOUTAN_PG_DATASOURCE"), "jdbc:postgresql://localhost:5432/chahoutan?user=postgres");
 
     public static final String AUTHOR = "TeaCon";
     public static final String TITLE = "TeaCon 茶后谈";
