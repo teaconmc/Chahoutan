@@ -59,7 +59,7 @@ public class PostEndpoint
             var queryDefaultPage = ChahoutanConfig.POST_QUERY_DEFAULT_PAGE;
             // generation of tsquery by collecting letters and numbers only
             var tsquery = Arrays.stream(query.split("[^\\p{L}\\p{N}]+", -1))
-                    .filter(s -> s.length() > 0).map(s -> s + ":*").collect(Collectors.joining(" <-> "));
+                    .filter(s -> s.length() > 0).map(s -> s + ":*").collect(Collectors.joining(" & "));
             return this.searchIndexRepo.selectByQuery(config, tsquery, lastId, queryDefaultPage).stream().flatMap(
                     id -> this.postRepo.findByIdAndRevisionNotNull(id).stream()).map(PostResponse::from).iterator();
         }
