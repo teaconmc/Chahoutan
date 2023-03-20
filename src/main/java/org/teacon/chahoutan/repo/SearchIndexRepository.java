@@ -25,6 +25,8 @@ public interface SearchIndexRepository extends CrudRepository<SearchIndex, UUID>
                 FROM chahoutan_posts p JOIN chahoutan_revisions r ON p.revision_id = r.id AND p.id = :id
                 UNION ALL SELECT p.id, c.text_content
                 FROM chahoutan_posts p JOIN chahoutan_corrections c ON p.revision_id = c.revision_id AND p.id = :id
+                UNION ALL SELECT p.id, e.editor AS text_content
+                FROM chahoutan_posts p JOIN chahoutan_editors e ON p.id = e.post_id AND p.id = :id
             )
             AS pairs
             """;
