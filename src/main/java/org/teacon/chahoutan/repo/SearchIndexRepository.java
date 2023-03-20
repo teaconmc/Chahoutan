@@ -32,9 +32,13 @@ public interface SearchIndexRepository extends CrudRepository<SearchIndex, UUID>
             SELECT p.id FROM chahoutan_posts p
             """;
     String SELECT_BY_QUERY = """
-            SELECT si.post_id FROM chahoutan_search_indexes si WHERE si.post_id <= :until
-            AND ts_match_vq(si.search_index_vector, websearch_to_tsquery(cast(:config AS regconfig), :query)) GROUP BY si.post_id
-            ORDER BY max(ts_rank(si.search_index_vector, websearch_to_tsquery(cast(:config AS regconfig), :query))) DESC, si.post_id DESC
+            SELECT post_id FROM
+            (
+                SELECT si.post_id AS post_id, ts_rank_cd(si.search_index_vector, query) AS rank
+                FROM chahoutan_search_indexes si, to_tsquery(cast(:config AS regconfig), :query) query
+                WHERE si.post_id <= :until ORDER BY rank DESC, post_id DESC
+            )
+            AS results WHERE rank > 0
             """;
 
     @Modifying

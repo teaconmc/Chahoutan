@@ -18,10 +18,8 @@ import org.teacon.chahoutan.repo.SearchIndexRepository;
 import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Path("/v1/posts")
@@ -59,7 +57,10 @@ public class PostEndpoint
         {
             var config = ChahoutanConfig.PG_FTS_CONFIG;
             var queryDefaultPage = ChahoutanConfig.POST_QUERY_DEFAULT_PAGE;
-            return this.searchIndexRepo.selectByQuery(config, query, lastId, queryDefaultPage).stream().flatMap(
+            // generation of tsquery by collecting letters and numbers only
+            var tsquery = Arrays.stream(query.split("[^\\p{L}\\p{N}]+", -1))
+                    .filter(s -> s.length() > 0).map(s -> s + ":*").collect(Collectors.joining(" <-> "));
+            return this.searchIndexRepo.selectByQuery(config, tsquery, lastId, queryDefaultPage).stream().flatMap(
                     id -> this.postRepo.findByIdAndRevisionNotNull(id).stream()).map(PostResponse::from).iterator();
         }
     }
