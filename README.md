@@ -7,8 +7,8 @@ The backend of contents in Chahoutan.
 ## 构建和使用
 
 ```bash
-docker build . -t ghcr.io/teaconmc/chahoutan
-docker run --rm ghcr.io/teaconmc/chahoutan
+docker build . -t ghcr.io/teaconmc/chahoutan:master
+docker run --rm ghcr.io/teaconmc/chahoutan:master
 ```
 
 工作目录文件：
