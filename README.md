@@ -6,22 +6,9 @@ The backend of contents in Chahoutan.
 
 ## 构建和使用
 
-需要 Java 17 或更高版本。
-
-Linux / macOS：
-
-```shell
-./gradlew bootJar
-
-java -jar build/libs/Chahoutan-<version>.jar
-```
-
-Windows：
-
-```shell
-gradlew.bat bootJar
-
-java -jar build/libs/Chahoutan-<version>.jar
+```bash
+docker build . -t ghcr.io/teaconmc/chahoutan
+docker run --rm ghcr.io/teaconmc/chahoutan
 ```
 
 工作目录文件：
