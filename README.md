@@ -169,7 +169,7 @@ GET /v1/posts/{{revision-id}}/revisions
 私有更新 API：
 
 > 需添加 `Authorization: Bearer <token>` 请求头，`<token>` 位于 `chahoutan-tokens.txt` 下。
-
+>
 > `POST /v1/images` 的 `Content-Type` 需为图片格式，`DELETE` 和 `POST /v1/refresh` 无需 `Content-Type`，其他均为 `application/json`。
 
 ```text
