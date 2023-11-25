@@ -48,6 +48,12 @@ public class Revision
     private List<Correction> corrections = new ArrayList<>();
 
     @ElementCollection
+    @OrderColumn(name = "footnote_ordinal", columnDefinition = "int")
+    @Column(name = "footnote", columnDefinition = "text", nullable = false)
+    @CollectionTable(name = "chahoutan_post_footnotes", joinColumns = @JoinColumn(name = "revision_id"))
+    private List<String> footnotes = new ArrayList<>();
+
+    @ElementCollection
     @MapKeyColumn(name = "anchor", columnDefinition = "text")
     @Column(name = "link", columnDefinition = "text", nullable = false)
     @CollectionTable(name = "chahoutan_post_anchors", joinColumns = @JoinColumn(name = "revision_id"))
@@ -104,6 +110,16 @@ public class Revision
     public List<Image> getImages()
     {
         return List.copyOf(this.images);
+    }
+
+    public Map<String, String> getFootnotes()
+    {
+        var footnoteCount = this.footnotes.size();
+        var map = new LinkedHashMap<String, String>(footnoteCount);
+        for (int i = 0; i < footnoteCount; ++i) {
+            map.put(String.format("[%d]", i + 1), this.footnotes.get(i));
+        }
+        return Map.copyOf(map);
     }
 
     public String getRssPlainText()
@@ -199,6 +215,14 @@ public class Revision
     public void setCreationTime(Instant time)
     {
         this.creationTime = time.atZone(ChahoutanConfig.POST_ZONE_ID);
+    }
+
+    public void setFootnotes(Map<String, String> footnotes) {
+        var array = new String[footnotes.size()];
+        for (var i = 0; i < array.length; ++i) {
+            array[i] = Objects.requireNonNull(footnotes.get(String.format("[%d]", i + 1)));
+        }
+        this.footnotes = List.of(array);
     }
 
     public void setAnchors(List<String> anchors)

@@ -74,6 +74,15 @@ CREATE TABLE chahoutan_post_anchors
     CONSTRAINT fk66omt1yfcmam8rn9s3f5qh6pq FOREIGN KEY (revision_id) REFERENCES chahoutan_revisions (id)
 );
 
+CREATE TABLE chahoutan_post_footnotes
+(
+    revision_id uuid NOT NULL,
+    footnote text NOT NULL,
+    footnote_ordinal int4 NOT NULL,
+    CONSTRAINT chahoutan_post_footnotes_pkey PRIMARY KEY (revision_id, footnote_ordinal),
+    CONSTRAINT fk7epb56mbnx4mqd2vvu5k7fv46 FOREIGN KEY (revision_id) REFERENCES chahoutan_revisions (id)
+);
+
 CREATE TABLE chahoutan_post_images
 (
     revision_id uuid NOT NULL,
