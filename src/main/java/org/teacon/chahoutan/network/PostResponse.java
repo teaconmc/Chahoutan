@@ -25,30 +25,29 @@ public record PostResponse(@JsonProperty(value = "id") int id,
                            @JsonProperty(value = "anchor_urls") List<String> anchorUrls,
                            @JsonProperty(value = "images") List<ImageResponse> postImages,
                            @JsonProperty(value = "footnotes") Map<String, String> footnotes,
+                           @JsonProperty(value = "footnote_urls") Map<String, String> footnoteUrls,
                            @JsonProperty(value = "publish_time") OffsetDateTime publishTime)
 {
     public static PostResponse from(Post post)
     {
         var revision = post.getRevision();
         var revisionName = revision.getTitle();
-        var publishTime = post.getPublishTime();
-        var footnotes = revision.getFootnotes();
         var urlPrefix = URI.create(ChahoutanConfig.BACKEND_URL_PREFIX);
         var url = urlPrefix.resolve("v1/posts/" + post.getId());
         var revisionUrl = urlPrefix.resolve("v1/posts/" + revision.getId());
         var type = post.getId() <= Post.getLastPublicPostId(null) ? "post" : "draft";
         var editors = post.getEditors().stream().sorted().toList();
         var images = revision.getImages().stream().map(ImageResponse::from).toList();
-        return new PostResponse(post.getId(), url, type, revisionName, revision.getText(), revision.getId(),
-                revisionUrl, editors, revision.getAnchors(), revision.getAnchorUrls(), images, footnotes, publishTime);
+        return new PostResponse(post.getId(), url, type,
+                revisionName, revision.getText(), revision.getId(),
+                revisionUrl, editors, revision.getAnchors(), revision.getAnchorUrls(),
+                images, revision.getFootnotes(), revision.getFootnoteUrls(), post.getPublishTime());
     }
 
     public static PostResponse from(Revision revision)
     {
         var post = revision.getPost();
         var revisionName = revision.getTitle();
-        var publishTime = post.getPublishTime();
-        var footnotes = revision.getFootnotes();
         var isPost = post.getRevision() != null && post.getRevision().getId().equals(revision.getId());
         var urlPrefix = URI.create(ChahoutanConfig.BACKEND_URL_PREFIX);
         var url = isPost ? urlPrefix.resolve("v1/posts/" + post.getId()) : null;
@@ -56,7 +55,9 @@ public record PostResponse(@JsonProperty(value = "id") int id,
         var type = isPost ? post.getId() <= Post.getLastPublicPostId(null) ? "post" : "draft" : "revision";
         var editors = isPost ? post.getEditors().stream().sorted().toList() : null;
         var images = revision.getImages().stream().map(ImageResponse::from).toList();
-        return new PostResponse(post.getId(), url, type, revisionName, revision.getText(), revision.getId(),
-                revisionUrl, editors, revision.getAnchors(), revision.getAnchorUrls(), images, footnotes, publishTime);
+        return new PostResponse(post.getId(), url, type,
+                revisionName, revision.getText(), revision.getId(),
+                revisionUrl, editors, revision.getAnchors(), revision.getAnchorUrls(),
+                images, revision.getFootnotes(), revision.getFootnoteUrls(), post.getPublishTime());
     }
 }

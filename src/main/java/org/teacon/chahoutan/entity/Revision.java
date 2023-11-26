@@ -122,6 +122,16 @@ public class Revision
         return Map.copyOf(map);
     }
 
+    public Map<String, String> getFootnoteUrls()
+    {
+        var footnoteCount = this.footnotes.size();
+        var map = new LinkedHashMap<String, String>(footnoteCount);
+        for (int i = 0; i < footnoteCount; ++i) {
+            map.put(String.format("[%d]", i + 1), "#footnote-" + this.footnotes.get(i));
+        }
+        return Map.copyOf(map);
+    }
+
     public String getRssPlainText()
     {
         var editors = this.post.getEditors();
