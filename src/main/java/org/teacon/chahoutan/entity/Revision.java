@@ -127,7 +127,7 @@ public class Revision
         var footnoteCount = this.footnotes.size();
         var map = new LinkedHashMap<String, String>(footnoteCount);
         for (int i = 0; i < footnoteCount; ++i) {
-            map.put(String.format("[%d]", i + 1), "#footnote-" + this.footnotes.get(i));
+            map.put(String.format("[%d]", i + 1), "#footnote-" + i);
         }
         return Map.copyOf(map);
     }
