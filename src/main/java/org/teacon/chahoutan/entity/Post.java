@@ -3,6 +3,7 @@ package org.teacon.chahoutan.entity;
 import org.teacon.chahoutan.ChahoutanConfig;
 
 import javax.persistence.*;
+import java.net.URI;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
@@ -40,6 +41,11 @@ public class Post
     public Integer getId()
     {
         return this.id;
+    }
+
+    public URI getBackendUrl() {
+        var urlPrefix = URI.create(ChahoutanConfig.BACKEND_URL_PREFIX);
+        return urlPrefix.resolve("v1/posts/" + this.id);
     }
 
     public Revision getRevision()

@@ -32,15 +32,12 @@ public record PostResponse(@JsonProperty(value = "id") int id,
     {
         var revision = post.getRevision();
         var revisionName = revision.getTitle();
-        var urlPrefix = URI.create(ChahoutanConfig.BACKEND_URL_PREFIX);
-        var url = urlPrefix.resolve("v1/posts/" + post.getId());
-        var revisionUrl = urlPrefix.resolve("v1/posts/" + revision.getId());
         var type = post.getId() <= Post.getLastPublicPostId(null) ? "post" : "draft";
         var editors = post.getEditors().stream().sorted().toList();
         var images = revision.getImages().stream().map(ImageResponse::from).toList();
-        return new PostResponse(post.getId(), url, type,
-                revisionName, revision.getText(), revision.getId(),
-                revisionUrl, editors, revision.getAnchors(), revision.getAnchorUrls(),
+        return new PostResponse(post.getId(), post.getBackendUrl(),
+                type, revisionName, revision.getText(), revision.getId(),
+                revision.getBackendUrl(), editors, revision.getAnchors(), revision.getAnchorUrls(),
                 images, revision.getFootnotes(), revision.getFootnoteUrls(), post.getPublishTime());
     }
 
@@ -49,15 +46,13 @@ public record PostResponse(@JsonProperty(value = "id") int id,
         var post = revision.getPost();
         var revisionName = revision.getTitle();
         var isPost = post.getRevision() != null && post.getRevision().getId().equals(revision.getId());
-        var urlPrefix = URI.create(ChahoutanConfig.BACKEND_URL_PREFIX);
-        var url = isPost ? urlPrefix.resolve("v1/posts/" + post.getId()) : null;
-        var revisionUrl = urlPrefix.resolve("v1/posts/" + revision.getId());
         var type = isPost ? post.getId() <= Post.getLastPublicPostId(null) ? "post" : "draft" : "revision";
         var editors = isPost ? post.getEditors().stream().sorted().toList() : null;
         var images = revision.getImages().stream().map(ImageResponse::from).toList();
-        return new PostResponse(post.getId(), url, type,
-                revisionName, revision.getText(), revision.getId(),
-                revisionUrl, editors, revision.getAnchors(), revision.getAnchorUrls(),
+        return new PostResponse(post.getId(),
+                isPost ? post.getBackendUrl() : null,
+                type, revisionName, revision.getText(), revision.getId(),
+                revision.getBackendUrl(), editors, revision.getAnchors(), revision.getAnchorUrls(),
                 images, revision.getFootnotes(), revision.getFootnoteUrls(), post.getPublishTime());
     }
 }

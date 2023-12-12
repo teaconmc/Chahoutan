@@ -97,6 +97,11 @@ public class Revision
         return this.text;
     }
 
+    public URI getBackendUrl() {
+        var urlPrefix = URI.create(ChahoutanConfig.BACKEND_URL_PREFIX);
+        return urlPrefix.resolve("v1/posts/" + this.id);
+    }
+
     public List<String> getAnchors()
     {
         return this.anchors.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getKey).toList();
@@ -126,8 +131,10 @@ public class Revision
     {
         var footnoteCount = this.footnotes.size();
         var map = new LinkedHashMap<String, String>(footnoteCount);
+        var urlPrefix = URI.create(ChahoutanConfig.FRONTEND_URL_PREFIX);
         for (int i = 0; i < footnoteCount; ++i) {
-            map.put(String.format("[%d]", i + 1), "#footnote-" + i);
+            var url = urlPrefix.resolve(this.post.getId() + "#footnote-" + i);
+            map.put(String.format("[%d]", i + 1), url.toASCIIString());
         }
         return Map.copyOf(map);
     }
