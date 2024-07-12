@@ -13,17 +13,25 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-      - name: Login to the Container Registry
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3.0.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Login to Private Container Registry
+        uses: docker/login-action@v3.0.0
+        with:
+          registry: ${{ secrets.TEACON_REGISTRY }}
+          username: ${{ secrets.TEACON_REGISTRY_USERNAME }}
+          password: ${{ secrets.TEACON_REGISTRY_TOKEN }}
       - name: Extract Metadata for Docker
         id: meta
         uses: docker/metadata-action@v5.0.0
         with:
-          images: ghcr.io/${{ github.repository_owner }}/chahoutan
+          images: |
+            ${{ secrets.TEACON_REGISTRY }}/chahoutan
+            ghcr.io/${{ github.repository_owner }}/chahoutan
       - name: Build and Push Docker Image
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
         with:
@@ -31,3 +39,4 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+      
